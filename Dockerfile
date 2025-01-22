@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
     postgresql-client \
     libpq-dev \
     git \
-    vim \
+    nano \
     && rm -rf /var/lib/apt/lists/*
 
 # Imposta una directory di lavoro
