@@ -6,3 +6,6 @@
 # Per compilare
 
 - `gcc -o my_program main.c -I/usr/include/postgresql -lpq`
+
+# Per scaricare pg
+- sudo apt-get install --reinstall libpq-dev
