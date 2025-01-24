@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "connectiondb.h": "c",
+        "auth.h": "c",
+        "in.h": "c"
+    }
+}

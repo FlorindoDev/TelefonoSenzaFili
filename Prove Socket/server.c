@@ -4,58 +4,14 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 
+#include "../include/auth.h"
+#include "../include/connectionDB.h"
+
 #define PORT 8080
 #define BUFFER_SIZE 1024
 
-
-void home(Utente utente){
-
-
-}
-
-char gestisciStringa(const char *input) {
-    char ret;
-    char copia[BUFFER_SIZE];
-    strncpy(copia, input, BUFFER_SIZE); // Copia la stringa ricevuta per non modificarla direttamente
-    
-    PGconn* conn=connect_to_DB();
-
-    // Tokenizzazione della stringa con ":" come separatore
-    char *token = strtok(copia, ":");
-    int parte = 1;
-    Utente utente;
-    printf("QUI...1\n");
-    strcpy(utente.funzione,token);
-    printf("%s\n",utente.funzione);
-
-    token = strtok(NULL, ":");
-    strcpy(utente.nome,token);
-    printf("%s\n",utente.nome);
-
-    token = strtok(NULL, ":");
-    strcpy(utente.password,token);
-    printf("%s\n",utente.password);
-
-    if(strcmp(utente.funzione,"signup") == 0){
-        token = strtok(NULL, ":");
-        strcpy(utente.lingua,token);
-        
-        ret =  register_user(conn,&utente) ? 's' : 'n';
-        home(utente);
-
-    }else if (strcmp(utente.funzione,"login") == 0)
-    {
-        printf("login qui\n");
-        ret = login(conn,&utente) ? 'l' : 'n';
-        home(utente);
-    }
-
-    PQfinish(conn);
-    return ret;
-
-
-
-}
+char* controlloRichiestaUtente(const char *, Utente *);
+void home(Utente * );
 
 int mainServer() {
     int server_fd, new_socket;
@@ -90,7 +46,8 @@ int mainServer() {
     }
 
     while (1){
-    
+        Utente utente;
+
         printf("Server in ascolto sulla porta %d...\n", PORT);
 
         // Accetta la connessione da un client
@@ -106,27 +63,15 @@ int mainServer() {
 
         // Gestisce la stringa separata da ":"
         const char *response;
-        char c = gestisciStringa(buffer);
-        printf("%c\n",c);
-        response = "";
-        if(c == 's'){
-
-            // Risposta al client
-            response = "Registrato";
-
-        }else if (c == 'l'){
-            response = "Login";
-        }else{
-
-            response = "Qualcosa è andato storto";
-        }
-
+        
+        //mi faccio dare la risposta e gli do l'utente per riempirlo
+        response = controlloRichiestaUtente(buffer, &utente);
+        
         printf("MEssaggio da inviare %s\n", response);
         send(new_socket, response, strlen(response), 0);
 
         // Chiudi la connessione
         close(new_socket);
-
 
     }
     
@@ -134,4 +79,75 @@ int mainServer() {
     close(server_fd);
 
     return 0;
+}
+
+char* controlloRichiestaUtente(const char *input, Utente * utente) {
+
+    char copia[BUFFER_SIZE];
+    char* response = "";
+    strncpy(copia, input, BUFFER_SIZE); // Copia la stringa ricevuta per non modificarla direttamente
+    
+    
+    // Tokenizzazione della stringa con ":" come separatore
+    char *token = strtok(copia, ":");
+    int parte = 1;
+
+    printf("QUI...1\n");
+    
+    //Estraggo la funzione che desidera fare il client : login o signup
+    strcpy(utente->funzione,token);
+    printf("%s\n",utente->funzione);
+
+    //Estraggo il nome utente passato
+    token = strtok(NULL, ":");
+    strcpy(utente->nome,token);
+    printf("%s\n",utente->nome);
+
+    //Estraggo la password passata
+    token = strtok(NULL, ":");
+    strcpy(utente->password,token);
+    printf("%s\n",utente->password);
+
+    //Apro la connessione con il db
+    PGconn* conn = connect_to_DB();
+
+    //Operazione di registrazione
+    if(strcmp(utente->funzione,"signup") == 0){
+        
+        //Se sto effettuando la registrazione estraggo anche la lingua
+        token = strtok(NULL, ":");
+        strcpy(utente->lingua,token);
+        
+        //Chiedo al db di registrare e controllo
+        if(register_user(conn,utente) == 1){
+            response = "1";
+        }else{
+            response = "-1";
+    
+        }
+    //Operazione di login
+    }else if (strcmp(utente->funzione,"login") == 0){
+        
+        //Chiedo al db di fare il login e controllo
+        if(login(conn,utente) == 1){
+            response = "1";
+        }else{
+            response = "-1";
+        }
+        
+    }
+
+
+    PQfinish(conn);
+    
+    return response;
+
+}
+
+void home(Utente * utente){
+    printf("Sono nella Home\n");
+
+
+    printf("Esco dalla home\n");
+
 }

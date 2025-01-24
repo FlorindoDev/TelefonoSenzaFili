@@ -42,7 +42,7 @@ int main() {
                 if(risultato != 1){
                     printf("ERRORE : Nome o password errata\n");
                 }else{
-                    printf("loggato");
+                    printf("SUCCESSO : loggato");
                     homeShow();
                 }
 
@@ -124,8 +124,21 @@ int login(){
     printf("Messaggio inviato: %s\n", message);
 
     // Riceve la risposta dal server
-    read(sock, buffer, BUFFER_SIZE);
+    int charPassati = read(sock, buffer, BUFFER_SIZE);
+    if (charPassati < BUFFER_SIZE){
+        buffer[charPassati]='\0';
+    }
+    
     printf("Risposta dal server: %s\n", buffer);
+    
+    if(strcmp("-1",buffer) == 0){
+        return -1;
+    }else{
+        return 1;
+
+    }
+    
+    /*
     if(strcmp("Login",buffer) == 0){
 
         cleanSocketBuffer(sock, buffer, BUFFER_SIZE);
@@ -135,6 +148,9 @@ int login(){
 
     // Chiudi la socket
     cleanSocketBuffer(sock, buffer, BUFFER_SIZE);
+
+    */
+ 
     close(sock);
     return 0;
 
@@ -170,9 +186,6 @@ int signUp(){
     printf("Password: %s\n", password);
     printf("Lingua: %s\n", lingua);
 
-
-    printf("\n %s \n",message);
-
     // Creazione della socket
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         perror("Errore nella creazione della socket");
@@ -202,8 +215,24 @@ int signUp(){
     printf("Messaggio inviato: %s\n", message);
     
     // Riceve la risposta dal server
-    read(sock, buffer, BUFFER_SIZE);
+    int charPassati = read(sock, buffer, BUFFER_SIZE);
+    if (charPassati < BUFFER_SIZE){
+        buffer[charPassati]='\0';
+    }
+    
+    
     printf("Risposta dal server: %s\n", buffer);
+    
+    if(strcmp("-1",buffer) == 0){
+        return -1;
+    }else{
+        return 1;
+
+    }
+
+    
+    
+    /*
     if(strcmp("Registrato",buffer) == 0){
 
         cleanSocketBuffer(sock, buffer, BUFFER_SIZE);
@@ -213,6 +242,8 @@ int signUp(){
     
     // Chiudi la socket
     cleanSocketBuffer(sock, buffer, BUFFER_SIZE);
+    */
+
     close(sock);
     return 0;
     
