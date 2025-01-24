@@ -135,6 +135,9 @@ char* controlloRichiestaUtente(const char *input, Utente * utente) {
             response = "-1";
         }
         
+    }else{
+        response = "-1";
+
     }
 
 
