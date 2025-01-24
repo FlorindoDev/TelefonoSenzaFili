@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "*.md": "bat",
+        "stdlib.h": "c"
+    }
+}
