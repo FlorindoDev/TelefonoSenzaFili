@@ -5,4 +5,4 @@
 
 # Per compilare
 
-- 'gcc -o my_program main.c -I/usr/include/postgresql -lpq'
+- `gcc -o my_program main.c -I/usr/include/postgresql -lpq`
