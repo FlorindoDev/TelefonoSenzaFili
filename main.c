@@ -4,7 +4,7 @@
 
 #include "include/connectionDB.h"
 #include "include/auth.h"
-#include "Prove giSocket/server.c"
+#include "Prove Socket/server.c"
 
 
 int main(){
