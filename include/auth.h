@@ -20,6 +20,7 @@ enum Stato {
 typedef struct Stanza{
     char nomeStanza[50];
     enum Stato stato;
+    Utente proprietario;
     Utente * listaPartecipanti;
     struct Stanza * next;
     

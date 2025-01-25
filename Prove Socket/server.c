@@ -23,7 +23,7 @@ void printStanze(){
     Stanza * s = stanze;
     printf("[LISTA]");
     while(s != NULL){
-        printf(" ->%s",s->nomeStanza);
+        printf(" ->%s(%s) ",s->nomeStanza,s->proprietario.nome);
         s = s->next;
     }
     
@@ -31,8 +31,27 @@ void printStanze(){
     
 
 
+
+
 }
 
+void gestioneNuovaConnessione(int* new_socket, char* buffer, Utente * utente){
+
+    // Riceve il messaggio dal client
+    read(*new_socket, buffer, BUFFER_SIZE);
+    printf("\nElaborazione della stringa ricevuta...\n");
+    // Gestisce la stringa separata da ":"
+    const char *response;
+        
+    //mi faccio dare la risposta e gli do l'utente per riempirlo
+    response = controlloRichiestaUtente(buffer, utente);
+    
+    printf("MEssaggio da inviare %s\n", response);
+    send(*new_socket, response, strlen(response), 0);
+    // Chiudi la connessione
+    close(*new_socket);
+
+}
 
 int mainServer() {
     int server_fd, new_socket;
@@ -79,22 +98,8 @@ int mainServer() {
             return -1;
         }
 
-       
-        // Riceve il messaggio dal client
-        read(new_socket, buffer, BUFFER_SIZE);
-        printf("\nElaborazione della stringa ricevuta...\n");
-        // Gestisce la stringa separata da ":"
-        const char *response;
-        
-        //mi faccio dare la risposta e gli do l'utente per riempirlo
-        response = controlloRichiestaUtente(buffer, &utente);
-    
-        printf("MEssaggio da inviare %s\n", response);
-        send(new_socket, response, strlen(response), 0);
-        // Chiudi la connessione
-        close(new_socket);
-    
-
+        gestioneNuovaConnessione(&new_socket,buffer,&utente);
+      
         
         
         printStanze();
@@ -157,12 +162,18 @@ char* controlloRichiestaUtente(const char *input, Utente * utente) {
     }else if (strcmp(utente->funzione,"create") == 0){
         
         Stanza * tmp = (Stanza *) malloc(sizeof(Stanza));
+        Utente * proprietario = (Utente *) malloc(sizeof(Utente));
         
         token = strtok(NULL, ":");
         strcpy(utente->lingua,token);
       
         token = strtok(NULL, ":");
         strcpy(tmp->nomeStanza,token);
+
+        strcpy(tmp->proprietario.nome,utente->nome);
+        strcpy(tmp->proprietario.password,utente->password);
+        strcpy(tmp->proprietario.lingua,utente->lingua);
+        tmp->listaPartecipanti = &(tmp->proprietario);
 
         if(existStanza(tmp) == 0){
             response = "-1";   
