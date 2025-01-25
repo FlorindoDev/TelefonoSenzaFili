@@ -35,3 +35,26 @@ ListStanze* initTesta(){
     }
     return listStanze;
 }
+
+
+int removeStanza(ListStanze* liststanze, char* nomeStanza){
+    if(liststanze->next == NULL) return 0;
+    Stanza *tmp = liststanze->next;
+    Stanza *pre = NULL;
+    while(tmp != NULL){
+        if(pre == NULL && strcmp(tmp->nomeStanza,nomeStanza)==0){
+            liststanze->next = tmp->next;
+            free(tmp);
+            return 1;
+        }else if(strcmp(tmp->nomeStanza,nomeStanza)==0){
+            pre->next=tmp->next;
+            free(tmp);
+            return 1;
+        }
+        pre = tmp;
+        tmp=tmp->next;
+    }
+
+    return 0;
+
+}

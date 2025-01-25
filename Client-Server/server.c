@@ -16,14 +16,13 @@
 #define BUFFER_SIZE 1024
 
 char* controlloRichiestaUtente(const char *, Utente *);
-
-
 void home(Utente * );
 
 
 
 ListStanze* listStanze = NULL;
 
+//provisoria
 void printStanze(){
     Stanza * s = listStanze->next;
     printf("[LISTA]");
@@ -102,7 +101,7 @@ int mainServer() {
             close(server_fd);
             return -1;
         }
-        
+
         gestioneNuovaConnessione(&new_socket,buffer,&utente);
       
         printStanze();
@@ -155,7 +154,6 @@ char* controlloRichiestaUtente(const char *input, Utente * utente) {
         
         //Chiedo al db di registrare e controllo
         response = register_user(conn,utente) ? "1" : "-1";
-
         
     //Operazione di login
     }else if (strcmp(utente->funzione,"login") == 0){

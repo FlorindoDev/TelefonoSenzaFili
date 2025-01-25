@@ -59,8 +59,12 @@ Inizializza la testa della lista
 */
 ListStanze* initTesta();
 
-
-void removeStanza(Stanza* stanza, Stanza* old);
+/*
+- `liststanze`: nodo iniziale(origine)
+- `nomeStanza`: nome dell stanza che voglio cancellare
+`return` ritorna `1` se cancelata e `0` se non cancellata
+*/
+int removeStanza(ListStanze* liststanze, char* nomeStanza);
 
 #include "Stanze.c"
 
