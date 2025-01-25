@@ -11,5 +11,5 @@
 - `sudo apt-get install --reinstall libpq-dev`
 
 # Schema Database
-![Chema Concettuale Database](percorso/dell'immagine.jpg)
+![Chema Concettuale Database](/database LSO.pdf)
 
