@@ -55,14 +55,8 @@ struct sockaddr_in serv_addr;
 char buffer[BUFFER_SIZE] = {0};
 
 
-//TEMP FUNZ
-void cleanSocketBuffer(int sock, char buffer[BUFFER_SIZE], int size);
-
-
 Utente utente;
 Stanza stanza;
-
-
 
 
 int main() {
@@ -273,12 +267,8 @@ int creaStanzaGioco(){
         
         chiudiSocket();
     
-        if(strcmp("-1",buffer) == 0){
-            return -1;
-        }else{
-            return 1;
+        return strcmp("-1",buffer) ? 1 : -1;
 
-        }
     }
     
 
@@ -301,7 +291,7 @@ int creaSocket(){
     memset(&serv_addr, 0, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(PORT);
-    serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");;
+    serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
     
     // Connessione al server
     if ((connect(sock, (struct sockaddr*)&serv_addr,sizeof(serv_addr))) < 0) {
@@ -321,7 +311,6 @@ int chiudiSocket(){
 
 void creaComando(char* message , char* funzione){
 
-    
 
     strcpy(message,funzione);
     strcat(message,":");
@@ -329,11 +318,8 @@ void creaComando(char* message , char* funzione){
     strcat(message,":");
     strcat(message,utente.password);
     strcat(message,":");
-    if(strcmp(utente.lingua,"")==0){
-        strcat(message," ");
-    }else{
-        strcat(message,utente.lingua);
-    }
+
+    strcmp(utente.lingua,"") ? strcat(message,utente.lingua) : strcat(message," ");
     
     strcat(message,":");
     strcat(message,stanza.nomeStanza);
@@ -361,13 +347,3 @@ void mandaMessaggio(char * message){
 
 }
 
-void cleanSocketBuffer(int sock, char buffer[BUFFER_SIZE], int size){
-    int nread;
-    while((nread = read(sock, buffer, size-1)) > 0) {
-        buffer[nread]='\0';    // explicit null termination: updated based on comments
-        printf("%s\n",buffer); // print the current receive buffer with a newline
-        fflush(stdout);         // make sure everything makes it to the output
-        buffer[0]='\0';        // clear the buffer : I am 99% sure this is not needed now
-    }
-
-}

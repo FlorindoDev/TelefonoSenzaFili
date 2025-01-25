@@ -4,6 +4,8 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 
+
+//vengono gia incluse nel main
 #include "../include/auth.h"
 #include "../include/connectionDB.h"
 
@@ -17,6 +19,7 @@ int existStanza(Stanza * );
 void home(Utente * );
 int existStanza(Stanza * );
 
+
 Stanza * stanze = NULL;
 
 void printStanze(){
@@ -29,10 +32,6 @@ void printStanze(){
     
     printf(" -|\n");
     
-
-
-
-
 }
 
 void gestioneNuovaConnessione(int* new_socket, char* buffer, Utente * utente){
