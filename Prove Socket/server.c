@@ -145,21 +145,14 @@ char* controlloRichiestaUtente(const char *input, Utente * utente) {
         strcpy(utente->lingua,token);
         
         //Chiedo al db di registrare e controllo
-        if(register_user(conn,utente) == 1){
-            response = "1";
-        }else{
-            response = "-1";
-    
-        }
+        response = register_user(conn,utente) ? "1" : "-1";
+
+        
     //Operazione di login
     }else if (strcmp(utente->funzione,"login") == 0){
         
         //Chiedo al db di fare il login e controllo
-        if(login(conn,utente) == 1){
-            response = "1";
-        }else{
-            response = "-1";
-        }
+        response = login(conn,utente) ? "1" : "-1";
         
     }else if (strcmp(utente->funzione,"create") == 0){
         
@@ -182,6 +175,7 @@ char* controlloRichiestaUtente(const char *input, Utente * utente) {
       
         
     }else{
+
         response = "-1";
 
     }
