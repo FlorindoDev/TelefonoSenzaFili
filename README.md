@@ -11,5 +11,5 @@
 - `sudo apt-get install --reinstall libpq-dev`
 
 # Schema Database
-![Chema Concettuale Database](/database LSO.pdf)
+![Chema Concettuale Database](database LSO.pdf)
 
