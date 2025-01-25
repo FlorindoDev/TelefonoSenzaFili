@@ -1,10 +1,12 @@
 {
     "files.associations": {
+        "*.md": "bat",
         "connectiondb.h": "c",
         "auth.h": "c",
         "in.h": "c",
         "stdio.h": "c",
         "stdlib.h": "c",
-        "socket.h": "c"
+        "socket.h": "c",
+        "string.h": "c"
     }
 }
