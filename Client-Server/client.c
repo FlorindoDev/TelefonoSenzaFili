@@ -215,11 +215,6 @@ void homeShow(){
     } while (scelta != 3);
 
 
-   
-   
-   
-    
-
 }
 
 int entraStanzaGioco(){

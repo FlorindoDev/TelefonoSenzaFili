@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <pthread.h>
 
 
 
@@ -15,17 +16,16 @@
 #define BUFFER_SIZE 1024
 
 char* controlloRichiestaUtente(const char *, Utente *);
-void inserisciStanza(Stanza * );
-int existStanza(Stanza * );
+
 
 void home(Utente * );
-int existStanza(Stanza * );
 
 
-Stanza * stanze = NULL;
+
+ListStanze* listStanze = NULL;
 
 void printStanze(){
-    Stanza * s = stanze;
+    Stanza * s = listStanze->next;
     printf("[LISTA]");
     while(s != NULL){
         printf(" ->%s(%s) ",s->nomeStanza,s->proprietario.nome);
@@ -55,6 +55,10 @@ void gestioneNuovaConnessione(int* new_socket, char* buffer, Utente * utente){
 }
 
 int mainServer() {
+
+    //inzializza la lista delle stanze
+    listStanze=initTesta();
+
     int server_fd, new_socket;
     struct sockaddr_in address;
     int addrlen = sizeof(address);
@@ -98,12 +102,11 @@ int mainServer() {
             close(server_fd);
             return -1;
         }
-
+        
         gestioneNuovaConnessione(&new_socket,buffer,&utente);
       
-        
-        
         printStanze();
+        
 
     }
     
@@ -176,11 +179,10 @@ char* controlloRichiestaUtente(const char *input, Utente * utente) {
         strcpy(tmp->proprietario.lingua,utente->lingua);
         tmp->listaPartecipanti = &(tmp->proprietario);
 
-        if(existStanza(tmp) == 0){
+        if(existStanza(listStanze,tmp) == 1){
             response = "-1";   
         }else{
-            inserisciStanza(tmp);
-
+            inserisciStanza(listStanze,tmp);
             response = "1";
         }
 
@@ -199,16 +201,6 @@ char* controlloRichiestaUtente(const char *input, Utente * utente) {
 
 }
 
-void inserisciStanza(Stanza * tmp){
-    if(stanze != NULL){
-        tmp->next = stanze;
-        stanze = tmp;
-    }else{
-        stanze = tmp;
-    }
-
-}
-
 
 
 void home(Utente * utente){
@@ -219,15 +211,3 @@ void home(Utente * utente){
 
 }
 
-int existStanza(Stanza * s){
-    if(stanze != NULL){
-        Stanza * tmp = stanze;
-        while(tmp != NULL){
-            if(strcmp(tmp->nomeStanza,s->nomeStanza) == 0)
-                return 0;
-            tmp = tmp->next;
-        }
-    }
-
-    return -1;
-}
