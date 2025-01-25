@@ -16,23 +16,53 @@ typedef struct Utente{
     char lingua[50];
 }Utente;
 
+enum Stato {
+  CREATA,
+  INIZIATA,
+  SOSPESA,
+  FINITA,
+  CHIUSA
+};
+
+typedef struct Stanza{
+    char nomeStanza[50];
+    enum Stato stato;
+    
+}Stanza;
+
+
+//Menu dopo essere loggato
+void homeShow();
+
+//Funzioni richieste dall'utente
 int login();
 int signUp();
-void homeShow();
+int entraStanzaGioco();
+int creaStanzaGioco();
+
+//Funzione creazione del messaggio ben formattato
 void creaComando(char*  , char* );
+
+//Funzioni per gestione socket
 int creaSocket();
 int chiudiSocket();
 char* riceviRisposta();
 void mandaMessaggio(char*);
+
+//Variabiili globali per la gestione della socket per la socket
+int sock = 0;
+struct sockaddr_in serv_addr;
+char buffer[BUFFER_SIZE] = {0};
+
+
+//TEMP FUNZ
 void cleanSocketBuffer(int sock, char buffer[BUFFER_SIZE], int size);
 
 
 Utente utente;
+Stanza stanza;
 
-//per la socket
-int sock = 0;
-struct sockaddr_in serv_addr;
-char buffer[BUFFER_SIZE] = {0};
+
 
 
 int main() {
@@ -71,10 +101,10 @@ int main() {
                 }
                 break;
             case 3:
-                printf("Uscita dal programma.\n");
+                printf("SUCCESSO : Uscita dal programma.\n");
                 break;
             default:
-                printf("Opzione non valida. Riprova.\n");
+                printf("ERRORE : Opzione non valida. Riprova.\n");
                 break;
         }
     } while (scelta != 3);
@@ -166,7 +196,7 @@ int signUp(){
 }
 
 void homeShow(){
- 
+    int risultato;
     int scelta;
 
     do {
@@ -178,13 +208,84 @@ void homeShow(){
         scanf("%d", &scelta);
 
 
-    }while(scelta != 3);
+        switch (scelta) {
+            case 1:
+                risultato = entraStanzaGioco();
+                
+
+                break;
+            case 2:
+                
+                risultato = creaStanzaGioco();
+                if(risultato == -1){
+                    printf("ERRORE : creazione stanza di gioco fallita");
+                }else{
+                    printf("SUCCESSO : creazione stanza di gioco creata con successo");
+                }
+
+                break;
+            
+            case 3:
+                printf("SUCCESSO : LogOut eseguito");
+                break;
+            
+            default:
+                printf("ERRORE : Opzione non valida. Riprova.\n");
+                break;
+        }
+    } while (scelta != 3);
+
+
    
    
    
-    printf("SUCCESSO : LogOut eseguito");
+    
 
 }
+
+int entraStanzaGioco(){
+
+    return -1;
+}
+
+int creaStanzaGioco(){
+    
+    printf("\n\n=== Creazione Stanza ===\n");
+    
+    // Chiedere il nome
+    printf("Inserisci nome partita: ");
+    scanf("%49s", stanza.nomeStanza); // Limitiamo l'input a 49 caratteri per evitare buffer overflow
+
+    stanza.stato = CREATA;
+
+    char message[BUFFER_SIZE];
+    creaComando(message,"create");
+
+    int successo = creaSocket();
+
+    if(successo != -1){
+        
+        // Invia il messaggio al server
+        mandaMessaggio(message);
+       
+        // Riceve la risposta dal server
+        riceviRisposta();
+        
+        chiudiSocket();
+    
+        if(strcmp("-1",buffer) == 0){
+            return -1;
+        }else{
+            return 1;
+
+        }
+    }
+    
+
+    chiudiSocket();
+    return -1;
+}
+
 
 int creaSocket(){
     
@@ -220,15 +321,25 @@ int chiudiSocket(){
 
 void creaComando(char* message , char* funzione){
 
+    
+
     strcpy(message,funzione);
     strcat(message,":");
     strcat(message,utente.nome);
     strcat(message,":");
     strcat(message,utente.password);
     strcat(message,":");
-    strcat(message,utente.lingua);
+    if(strcmp(utente.lingua,"")==0){
+        strcat(message," ");
+    }else{
+        strcat(message,utente.lingua);
+    }
+    
     strcat(message,":");
-
+    strcat(message,stanza.nomeStanza);
+    strcat(message,":");
+    
+    
 }
 
 char* riceviRisposta(){

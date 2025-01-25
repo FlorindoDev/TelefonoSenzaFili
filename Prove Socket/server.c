@@ -11,7 +11,28 @@
 #define BUFFER_SIZE 1024
 
 char* controlloRichiestaUtente(const char *, Utente *);
+void inserisciStanza(Stanza * );
+int existStanza(Stanza * );
+
 void home(Utente * );
+int existStanza(Stanza * );
+
+Stanza * stanze = NULL;
+
+void printStanze(){
+    Stanza * s = stanze;
+    printf("[LISTA]");
+    while(s != NULL){
+        printf(" ->%s",s->nomeStanza);
+        s = s->next;
+    }
+    
+    printf(" -|\n");
+    
+
+
+}
+
 
 int mainServer() {
     int server_fd, new_socket;
@@ -47,9 +68,10 @@ int mainServer() {
 
     while (1){
         Utente utente;
-
+        
         printf("Server in ascolto sulla porta %d...\n", PORT);
 
+       
         // Accetta la connessione da un client
         if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen)) < 0) {
             perror("Errore nell'accept");
@@ -57,21 +79,25 @@ int mainServer() {
             return -1;
         }
 
+       
         // Riceve il messaggio dal client
         read(new_socket, buffer, BUFFER_SIZE);
         printf("\nElaborazione della stringa ricevuta...\n");
-
         // Gestisce la stringa separata da ":"
         const char *response;
         
         //mi faccio dare la risposta e gli do l'utente per riempirlo
         response = controlloRichiestaUtente(buffer, &utente);
-        
+    
         printf("MEssaggio da inviare %s\n", response);
         send(new_socket, response, strlen(response), 0);
-
         // Chiudi la connessione
         close(new_socket);
+    
+
+        
+        
+        printStanze();
 
     }
     
@@ -135,6 +161,26 @@ char* controlloRichiestaUtente(const char *input, Utente * utente) {
             response = "-1";
         }
         
+    }else if (strcmp(utente->funzione,"create") == 0){
+        
+        Stanza * tmp = (Stanza *) malloc(sizeof(Stanza));
+        
+        token = strtok(NULL, ":");
+        strcpy(utente->lingua,token);
+      
+        token = strtok(NULL, ":");
+        strcpy(tmp->nomeStanza,token);
+
+        if(existStanza(tmp) == 0){
+            response = "-1";   
+        }else{
+            inserisciStanza(tmp);
+
+            response = "1";
+        }
+
+      
+        
     }else{
         response = "-1";
 
@@ -147,10 +193,35 @@ char* controlloRichiestaUtente(const char *input, Utente * utente) {
 
 }
 
+void inserisciStanza(Stanza * tmp){
+    if(stanze != NULL){
+        tmp->next = stanze;
+        stanze = tmp;
+    }else{
+        stanze = tmp;
+    }
+
+}
+
+
+
 void home(Utente * utente){
     printf("Sono nella Home\n");
 
 
     printf("Esco dalla home\n");
 
+}
+
+int existStanza(Stanza * s){
+    if(stanze != NULL){
+        Stanza * tmp = stanze;
+        while(tmp != NULL){
+            if(strcmp(tmp->nomeStanza,s->nomeStanza) == 0)
+                return 0;
+            tmp = tmp->next;
+        }
+    }
+
+    return -1;
 }

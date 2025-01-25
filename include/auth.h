@@ -9,6 +9,23 @@ typedef struct Utente{
     struct Utente * next;
 }Utente;
 
+enum Stato {
+    CREATA,
+    INIZIATA,
+    SOSPESA,
+    FINITA,
+    CHIUSA
+};
+
+typedef struct Stanza{
+    char nomeStanza[50];
+    enum Stato stato;
+    Utente * listaPartecipanti;
+    struct Stanza * next;
+    
+}Stanza;
+
+
 int login(PGconn *conn,Utente*);
 
 int register_user(PGconn *conn,Utente*);
