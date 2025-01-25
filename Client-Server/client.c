@@ -7,28 +7,13 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 
+
+#include "../Librerie/Stanze/Stanze.h"
+#include "../Librerie/Utente.h"
+
 #define PORT 8080
 #define BUFFER_SIZE 1024
 
-typedef struct Utente{
-    char nome[50];
-    char password[50];
-    char lingua[50];
-}Utente;
-
-enum Stato {
-  CREATA,
-  INIZIATA,
-  SOSPESA,
-  FINITA,
-  CHIUSA
-};
-
-typedef struct Stanza{
-    char nomeStanza[50];
-    enum Stato stato;
-    
-}Stanza;
 
 
 //Menu dopo essere loggato

@@ -5,9 +5,11 @@
 #include <arpa/inet.h>
 
 
-//vengono gia incluse nel main
-#include "../include/auth.h"
-#include "../include/connectionDB.h"
+
+#include "../Librerie/Autenticazione/auth.h"
+#include "../Librerie/connessioneDB/connectionDB.h"
+#include "../Librerie/Stanze/Stanze.h"
+#include "../Librerie/Utente.h"
 
 #define PORT 8080
 #define BUFFER_SIZE 1024

@@ -2,10 +2,9 @@
 #include <stdlib.h>
 #include <libpq-fe.h>
 
-#include "include/connectionDB.h"
-#include "include/auth.h"
-#include "Prove Socket/server.c"
-
+#include "Librerie/connessioneDB/connectionDB.h"
+#include "Librerie/Autenticazione/auth.h"
+#include "Client-Server/server.c"
 
 int main(){
 
