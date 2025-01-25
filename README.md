@@ -11,6 +11,6 @@
 - `sudo apt-get install --reinstall libpq-dev`
 
 # Schema Database
-![Chema Concettuale Database](https://github.com/FlorindoDev/TelefonoSenzaFili/blob/master/database%20LSO.jpg)
+![Chema Concettuale Database](https://github.com/FlorindoDev/TelefonoSenzaFili/blob/master/Database%20LSO.jpg)
 
 
