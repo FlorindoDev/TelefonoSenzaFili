@@ -4,6 +4,8 @@
 #include <pthread.h>
 #include "../Utente.h"
 
+#define MAX_LEN 50
+
 
 enum Stato {
     CREATA,
@@ -16,7 +18,7 @@ enum Stato {
 
 
 typedef struct Stanza{
-    char nomeStanza[50];
+    char nomeStanza[MAX_LEN];
     enum Stato stato;
     Utente proprietario;
     Utente * listaPartecipanti;

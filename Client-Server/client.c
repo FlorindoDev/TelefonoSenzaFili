@@ -228,7 +228,13 @@ int creaStanzaGioco(){
     
     // Chiedere il nome
     printf("Inserisci nome partita: ");
-    scanf("%49s", stanza.nomeStanza); // Limitiamo l'input a 49 caratteri per evitare buffer overflow
+    
+    //Pulire buffer
+    char c;
+    while ((c = getchar()) != '\n' && c != EOF);
+    
+    scanf("%[^\n]",stanza.nomeStanza);
+    printf("\n(%s)\n",stanza.nomeStanza);
 
     stanza.stato = CREATA;
 
