@@ -13,6 +13,8 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     git \
     micro \
+    sudo \
+    net-tools \
     && rm -rf /var/lib/apt/lists/*
     # gcc -o my_program main.c -I/usr/include/postgresql -lpq \
     # gcc -o client ProveSocket/client.c
