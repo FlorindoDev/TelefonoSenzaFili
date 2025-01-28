@@ -297,6 +297,7 @@ int chiudiSocket(){
 
 void creaComando(char* message , char* funzione){
 
+    //Copy è per inizializzare la stringa messagge , senza prenderebbe anche i vecchi messaggi(colpa di malloc)
     strcmp(funzione,"") ? strcpy(message,funzione) : strcpy(message," ");
     strcat(message,":");
     

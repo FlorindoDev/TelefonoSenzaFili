@@ -98,13 +98,13 @@ int mainServer() {
         // Accetta la connessione da un client
         if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen)) < 0) {
             perror("Errore nell'accept");
-            close(server_fd);
-            return -1;
-        }
+            
+        }else{
 
-        gestioneNuovaConnessione(&new_socket,buffer,&utente);
+            gestioneNuovaConnessione(&new_socket,buffer,&utente);
       
-        printStanze();
+            printStanze();
+        }
         
 
     }
