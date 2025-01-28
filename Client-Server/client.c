@@ -297,7 +297,7 @@ int chiudiSocket(){
 
 void creaComando(char* message , char* funzione){
 
-    strcmp(funzione,"") ? strcat(message,funzione) : strcat(message," ");
+    strcmp(funzione,"") ? strcpy(message,funzione) : strcpy(message," ");
     strcat(message,":");
     
     strcmp(utente.nome,"") ? strcat(message,utente.nome) : strcat(message," ");
