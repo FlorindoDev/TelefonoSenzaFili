@@ -297,18 +297,19 @@ int chiudiSocket(){
 
 void creaComando(char* message , char* funzione){
 
-
-    strcpy(message,funzione);
+    strcmp(funzione,"") ? strcat(message,funzione) : strcat(message," ");
     strcat(message,":");
-    strcat(message,utente.nome);
+    
+    strcmp(utente.nome,"") ? strcat(message,utente.nome) : strcat(message," ");
     strcat(message,":");
-    strcat(message,utente.password);
+    
+    strcmp(utente.password,"") ? strcat(message,utente.password) : strcat(message," ");
     strcat(message,":");
 
     strcmp(utente.lingua,"") ? strcat(message,utente.lingua) : strcat(message," ");
-    
     strcat(message,":");
-    strcat(message,stanza.nomeStanza);
+
+    strcmp(stanza.nomeStanza,"") ? strcat(message,stanza.nomeStanza) : strcat(message," ");
     strcat(message,":");
     
     
