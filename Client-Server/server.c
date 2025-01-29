@@ -59,7 +59,7 @@ GestioneConnesioneArgs * initArg(int * new_socket){
     tmp->socket=new_socket;
     return tmp;
 }
-
+//franceco2
 
 //provisoria
 void printStanze(){
@@ -242,7 +242,7 @@ char* controlloRichiestaUtente(const char *input, Utente * utente) {
 
         if(existStanza(listStanze,tmp) == 1){
             response = "-1";  
-             
+
         }else{
             inserisciStanza(listStanze,tmp);
             response = "1";
