@@ -24,6 +24,7 @@ int login();
 int signUp();
 int entraStanzaGioco();
 int creaStanzaGioco();
+int gioca();
 
 //Funzione creazione del messaggio ben formattato
 void creaComando(char*  , char* );
@@ -190,7 +191,12 @@ void homeShow(){
         switch (scelta) {
             case 1:
                 risultato = entraStanzaGioco();
-                
+                if(risultato == -1){
+                    printf("ERRORE : stanza non esistente o inaccessibile");
+                }else{
+                    printf("SUCCESSO : entrato in stanza");
+                }
+                risultato = gioca();
 
                 break;
             case 2:
@@ -218,6 +224,66 @@ void homeShow(){
 }
 
 int entraStanzaGioco(){
+    
+    char message[BUFFER_SIZE];
+    creaComando(message,"show");
+
+    int successo = creaSocket();
+
+    if(successo != -1){
+        
+        // Invia il messaggio al server
+        mandaMessaggio(message);
+       
+        // Riceve la risposta dal server
+        riceviRisposta();
+        
+        chiudiSocket();
+
+
+    }
+    
+    chiudiSocket();
+
+    printf("\n STANZE ESISTENTI: [nome (porta)] \n");
+
+    char *token = strtok(buffer, ":");
+    unsigned long int i = 1;
+    while(token != NULL){
+        printf(" %lu) %s\n",i++,token);
+        token = strtok(NULL, ":");
+    }
+    
+    printf("Inserisci nome stanza in cui vuoi entrare : ");
+
+    //Pulire buffer
+    char c;
+    while ((c = getchar()) != '\n' && c != EOF);
+    
+    scanf("%[^\n]",stanza.nomeStanza);
+    
+
+    message[BUFFER_SIZE];
+    creaComando(message,"join");
+
+    successo = creaSocket();
+
+    if(successo != -1){
+        
+        // Invia il messaggio al server
+        mandaMessaggio(message);
+       
+        // Riceve la risposta dal server
+        riceviRisposta();
+        
+        chiudiSocket();
+
+        return strcmp("-1",buffer) ? 1 : -1;
+    }
+    
+
+    chiudiSocket();
+
 
     return -1;
 }
@@ -259,6 +325,12 @@ int creaStanzaGioco(){
     
 
     chiudiSocket();
+    return -1;
+}
+
+int gioca(){
+
+
     return -1;
 }
 

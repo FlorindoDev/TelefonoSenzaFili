@@ -47,6 +47,31 @@ ListStanze* initTesta(){
     return listStanze;
 }
 
+char*  showStanze(ListStanze* liststanze){
+    pthread_mutex_lock(&(liststanze->light));
+   
+    char message[1024];
+    char * res = (char *) malloc((1024)*sizeof(char));
+ 
+    Stanza * tmp = liststanze->next;printf("1");
+    strcpy(res,"");
+
+    while(tmp != NULL){
+        printf("%s (%u)",tmp->nomeStanza,tmp->port);
+        sprintf(message, "%s (%u):",tmp->nomeStanza,tmp->port);
+        strcat(res,message);
+
+        tmp = tmp->next;printf("5");
+    }
+
+
+    
+
+    pthread_mutex_unlock(&(liststanze->light));
+    return res;
+
+}
+
 
 int removeStanza(ListStanze* liststanze, char* nomeStanza){
     

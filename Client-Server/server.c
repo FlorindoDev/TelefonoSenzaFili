@@ -257,6 +257,22 @@ char* controlloRichiestaUtente(const char *input, Utente * utente) {
         
       
         
+    }else if (strcmp(utente->funzione,"show") == 0){
+      
+        response = showStanze(listStanze);
+
+        
+        
+           
+    }else if (strcmp(utente->funzione,"join") == 0){
+        
+        //To do
+      
+        
+
+        
+        response = "-1";
+        
     }else{
 
         response = "-1";

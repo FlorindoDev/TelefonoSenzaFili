@@ -78,6 +78,13 @@ int removeStanza(ListStanze* liststanze, char* nomeStanza);
 */
 ListStanze * freeStanze(ListStanze* liststanze);
 
+
+/* riposra in modo formattato tutte le stanze
+- `liststanze`: nodo iniziale(origine)
+`return` la stringa formattata
+*/
+char*  showStanze(ListStanze* liststanze);
+
 #include "Stanze.c"
 
 #endif
