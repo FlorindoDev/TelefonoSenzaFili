@@ -15,6 +15,10 @@ int login(PGconn* conn,Utente* utente){
     int rows = PQntuples(res);
     if (rows == 1) {
         printf("User authenticated successfully!\n");
+
+        //Prende la lingua
+        strcpy(utente->lingua,PQgetvalue(res,0,2));
+        
         PQclear(res);
         return 1; // Login riuscito
     } else {
