@@ -68,6 +68,13 @@ ListStanze* initTesta();
 */
 int removeStanza(ListStanze* liststanze, char* nomeStanza);
 
+
+/*cancella e libera la memoria del intera lista
+- `liststanze`: nodo iniziale(origine)
+`return` NULL
+*/
+ListStanze * freeStanze(ListStanze* liststanze);
+
 #include "Stanze.c"
 
 #endif

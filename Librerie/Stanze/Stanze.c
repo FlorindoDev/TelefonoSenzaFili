@@ -78,3 +78,19 @@ int removeStanza(ListStanze* liststanze, char* nomeStanza){
     return 0;
 
 }
+
+ListStanze* freeStanze(ListStanze* liststanze){
+    if(liststanze->next == NULL){
+        return NULL;
+    }
+    Stanza *tmp = liststanze->next;
+    Stanza *pre = NULL;
+    while(tmp != NULL){
+        pre = tmp;
+        tmp = tmp->next;
+        free(pre);
+    }
+    pthread_mutex_destroy(&(liststanze->light));
+    free(liststanze);
+    return NULL;
+}

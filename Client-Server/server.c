@@ -15,6 +15,8 @@
 #define PORT 8080
 #define BUFFER_SIZE 2048
  
+ListStanze* listStanze = NULL;
+
 char* controlloRichiestaUtente(const char *, Utente *);
 void gestioneNuovaConnessione(int* new_socket, char* buffer, Utente * utente);
 void home(Utente * );
@@ -28,11 +30,26 @@ typedef struct GestioneConnesioneArgs{
 
 }GestioneConnesioneArgs;
 
+void cleanup_handler_connection(void *args){
+    GestioneConnesioneArgs * arg=(GestioneConnesioneArgs *) args;
+    printf("sto pulendo sono %lu\n", pthread_self());
+    free(arg->socket);
+    free(arg);
+}
 
 void * Thread_GestioneNuovaConnessione(void *args){
     GestioneConnesioneArgs * arg=(GestioneConnesioneArgs *) args;
+
+    //aggunta handler per rupulire risorse allocate per il thread
+    pthread_cleanup_push(cleanup_handler_connection, args);
+    
+    //lavoro
     gestioneNuovaConnessione(arg->socket,arg->buffer,&(arg->utente));
+    //listStanze ? printStanze() : 0;
     printStanze();
+
+    //utilizzo del henadler prima della chiusura
+    pthread_cleanup_pop(1);  
     pthread_exit(NULL);
 }
 
@@ -42,7 +59,6 @@ GestioneConnesioneArgs * initArg(int * new_socket){
     return tmp;
 }
 
-ListStanze* listStanze = NULL;
 
 //provisoria
 void printStanze(){
@@ -118,7 +134,7 @@ int mainServer() {
     while (1){
         //Utente utente;
         
-        printf("Server in atessa di un client %d...\n", PORT);
+        printf("Server in atessa di un client...\n");
 
         int *new_socket = malloc(sizeof(int));
         // Accetta la connessione da un client
