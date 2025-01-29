@@ -2,6 +2,7 @@
 #include "Stanze.h"
 
 void inserisciStanza(ListStanze* liststanze, Stanza* new){
+    
     pthread_mutex_lock(&(liststanze->light));
     if(liststanze->next == NULL){
         new->next=NULL;
@@ -10,7 +11,8 @@ void inserisciStanza(ListStanze* liststanze, Stanza* new){
         new->next=liststanze->next;
         liststanze->next=new;
     }
-    pthread_mutex_unlock(&(liststanze->light));
+    pthread_mutex_unlock(&(liststanze->light));\
+    
 
 }
 

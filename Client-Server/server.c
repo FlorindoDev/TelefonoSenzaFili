@@ -13,17 +13,40 @@
 #include "../Librerie/Utente.h"
 
 #define PORT 8080
-#define BUFFER_SIZE 1024
-
+#define BUFFER_SIZE 2048
+ 
 char* controlloRichiestaUtente(const char *, Utente *);
+void gestioneNuovaConnessione(int* new_socket, char* buffer, Utente * utente);
 void home(Utente * );
+void printStanze();
+//int cont = 0;
+
+typedef struct GestioneConnesioneArgs{
+    int * socket;
+    char buffer[BUFFER_SIZE];
+    Utente utente;
+
+}GestioneConnesioneArgs;
 
 
+void * Thread_GestioneNuovaConnessione(void *args){
+    GestioneConnesioneArgs * arg=(GestioneConnesioneArgs *) args;
+    gestioneNuovaConnessione(arg->socket,arg->buffer,&(arg->utente));
+    printStanze();
+    pthread_exit(NULL);
+}
+
+GestioneConnesioneArgs * initArg(int * new_socket){
+    GestioneConnesioneArgs * tmp = (GestioneConnesioneArgs *)malloc(sizeof(GestioneConnesioneArgs));
+    tmp->socket=new_socket;
+    return tmp;
+}
 
 ListStanze* listStanze = NULL;
 
 //provisoria
 void printStanze(){
+    pthread_mutex_lock(&(listStanze->light));
     Stanza * s = listStanze->next;
     printf("[LISTA]");
     while(s != NULL){
@@ -32,6 +55,7 @@ void printStanze(){
     }
     
     printf(" -|\n");
+    pthread_mutex_unlock(&(listStanze->light));
     
 }
 
@@ -40,6 +64,7 @@ void gestioneNuovaConnessione(int* new_socket, char* buffer, Utente * utente){
     // Riceve il messaggio dal client
     read(*new_socket, buffer, BUFFER_SIZE);
     printf("\nElaborazione della stringa ricevuta...\n");
+    printf("\nRicevuto %s, sono %lu\n", buffer, pthread_self());
     // Gestisce la stringa separata da ":"
     const char *response;
         
@@ -58,10 +83,10 @@ int mainServer() {
     //inzializza la lista delle stanze
     listStanze=initTesta();
 
-    int server_fd, new_socket;
+    int server_fd;
     struct sockaddr_in address;
     int addrlen = sizeof(address);
-    char buffer[BUFFER_SIZE] = {0};
+    //char buffer[BUFFER_SIZE] = {0};
 
     
     // Creazione della socket
@@ -88,22 +113,32 @@ int mainServer() {
         close(server_fd);
         return -1;
     }
+    printf("Server in ascolto sulla porta %d...\n", PORT);
 
     while (1){
-        Utente utente;
+        //Utente utente;
         
-        printf("Server in ascolto sulla porta %d...\n", PORT);
+        printf("Server in atessa di un client %d...\n", PORT);
 
-       
+        int *new_socket = malloc(sizeof(int));
         // Accetta la connessione da un client
-        if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen)) < 0) {
+        if ((*new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen)) < 0) {
             perror("Errore nell'accept");
             
         }else{
-
-            gestioneNuovaConnessione(&new_socket,buffer,&utente);
+            printf("client accettato %d...\n", PORT);
+            pthread_t thread;
+            
+            GestioneConnesioneArgs * arg = initArg(new_socket);
+            if (pthread_create(&thread, NULL, Thread_GestioneNuovaConnessione, arg) != 0) {
+                perror("Errore nella creazione del thread");
+                return 1;
+            }
+        
+            pthread_detach(thread);
+            //gestioneNuovaConnessione(&new_socket,buffer,&utente);
       
-            printStanze();
+            //printStanze();
         }
         
 
@@ -119,11 +154,11 @@ char* controlloRichiestaUtente(const char *input, Utente * utente) {
 
     char copia[BUFFER_SIZE];
     char* response = "";
+    char *saveptr;
     strncpy(copia, input, BUFFER_SIZE); // Copia la stringa ricevuta per non modificarla direttamente
     
-    
     // Tokenizzazione della stringa con ":" come separatore
-    char *token = strtok(copia, ":");
+    char *token = strtok_r(copia, ":", &saveptr);
     int parte = 1;
 
     printf("QUI...1\n");
@@ -133,23 +168,24 @@ char* controlloRichiestaUtente(const char *input, Utente * utente) {
     printf("%s\n",utente->funzione);
 
     //Estraggo il nome utente passato
-    token = strtok(NULL, ":");
+    token = strtok_r(NULL, ":", &saveptr);
     strcpy(utente->nome,token);
     printf("%s\n",utente->nome);
 
     //Estraggo la password passata
-    token = strtok(NULL, ":");
+    token = strtok_r(NULL, ":", &saveptr);
     strcpy(utente->password,token);
     printf("%s\n",utente->password);
 
     //Apro la connessione con il db
+    //PGconn* conn = strcmp(utente->funzione,"create") ? NULL : connect_to_DB();
     PGconn* conn = connect_to_DB();
 
     //Operazione di registrazione
     if(strcmp(utente->funzione,"signup") == 0){
         
         //Se sto effettuando la registrazione estraggo anche la lingua
-        token = strtok(NULL, ":");
+        token = strtok_r(NULL, ":", &saveptr);
         strcpy(utente->lingua,token);
         
         //Chiedo al db di registrare e controllo
@@ -166,24 +202,28 @@ char* controlloRichiestaUtente(const char *input, Utente * utente) {
         Stanza * tmp = (Stanza *) malloc(sizeof(Stanza));
         Utente * proprietario = (Utente *) malloc(sizeof(Utente));
         
-        token = strtok(NULL, ":");
+        token = strtok_r(NULL, ":", &saveptr);
+        //printf("sono %lu, la mia stringa è `%s` - il token è `%s`\n", pthread_self(), input,token);
+        //printf("%p-%p\n",utente->lingua,token);
         strcpy(utente->lingua,token);
-      
-        token = strtok(NULL, ":");
+        
+
+        token = strtok_r(NULL, ":", &saveptr);
         strcpy(tmp->nomeStanza,token);
 
         strcpy(tmp->proprietario.nome,utente->nome);
         strcpy(tmp->proprietario.password,utente->password);
         strcpy(tmp->proprietario.lingua,utente->lingua);
         tmp->listaPartecipanti = &(tmp->proprietario);
-
+        
+        
         if(existStanza(listStanze,tmp) == 1){
             response = "-1";   
         }else{
             inserisciStanza(listStanze,tmp);
             response = "1";
         }
-
+        
       
         
     }else{
