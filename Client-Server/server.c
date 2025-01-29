@@ -59,7 +59,11 @@ GestioneConnesioneArgs * initArg(int * new_socket){
     tmp->socket=new_socket;
     return tmp;
 }
+<<<<<<< HEAD
 //florindo
+=======
+//change2
+>>>>>>> 8dd3b93280731ff48f54f1d338d79a0fc50140a7
 
 //provisoria
 void printStanze(){
