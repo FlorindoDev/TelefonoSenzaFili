@@ -5,8 +5,9 @@
 
 # Per compilare
 
-- `gcc -o my_program main.c -I/usr/include/postgresql -lpq`
-- `gcc -o my_program main.c -I/usr/include/postgresql -lpq -lpthread ; gcc -o client Client-Server/client.c`
+- `gcc -o my_program  -g main.c -I/usr/include/postgresql -lpq -lpthread`
+- `gcc -o my_program -g  main.c -I/usr/include/postgresql -lpq -lpthread ; gcc -o client Client-Server/client.c`
+- `valgrind --leak-check=full --track-origins=yes ./mio_programma`
 
 # Per scaricare pg
 - `sudo apt-get install --reinstall libpq-dev`
