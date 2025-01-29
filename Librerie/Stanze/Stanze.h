@@ -22,6 +22,9 @@ typedef struct Stanza{
     enum Stato stato;
     Utente proprietario;
     Utente * listaPartecipanti;
+    pid_t pid_proccesso_stanza;
+    unsigned short int port;
+    unsigned short int num_players;
     struct Stanza * next;
     
 }Stanza;

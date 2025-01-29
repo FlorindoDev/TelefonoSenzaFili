@@ -152,9 +152,7 @@ int mainServer() {
             }
         
             pthread_detach(thread);
-            //gestioneNuovaConnessione(&new_socket,buffer,&utente);
-      
-            //printStanze();
+            
         }
         
 
@@ -199,7 +197,7 @@ char* controlloRichiestaUtente(const char *input, Utente * utente) {
 
     //Operazione di registrazione
     if(strcmp(utente->funzione,"signup") == 0){
-        
+
         //Se sto effettuando la registrazione estraggo anche la lingua
         token = strtok_r(NULL, ":", &saveptr);
         strcpy(utente->lingua,token);
