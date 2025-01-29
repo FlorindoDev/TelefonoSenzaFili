@@ -14,6 +14,7 @@
 
 #define PORT 8080
 #define BUFFER_SIZE 2048
+#define PATH_EXE_PARTITA "./PartitaEXE"
  
 ListStanze* listStanze = NULL;
 
@@ -193,24 +194,28 @@ char* controlloRichiestaUtente(const char *input, Utente * utente) {
 
     //Apro la connessione con il db
     //PGconn* conn = strcmp(utente->funzione,"create") ? NULL : connect_to_DB();
-    PGconn* conn = connect_to_DB();
+    PGconn* conn = NULL;
 
     //Operazione di registrazione
     if(strcmp(utente->funzione,"signup") == 0){
-
+        
+        conn = connect_to_DB();
         //Se sto effettuando la registrazione estraggo anche la lingua
         token = strtok_r(NULL, ":", &saveptr);
         strcpy(utente->lingua,token);
         
         //Chiedo al db di registrare e controllo
         response = register_user(conn,utente) ? "1" : "-1";
-        
+        PQfinish(conn);
+
     //Operazione di login
     }else if (strcmp(utente->funzione,"login") == 0){
         
+        conn = connect_to_DB();
         //Chiedo al db di fare il login e controllo
         response = login(conn,utente) ? "1" : "-1";
-        
+        PQfinish(conn);
+
     }else if (strcmp(utente->funzione,"create") == 0){
         
         Stanza * tmp = (Stanza *) malloc(sizeof(Stanza));
@@ -230,12 +235,24 @@ char* controlloRichiestaUtente(const char *input, Utente * utente) {
         strcpy(tmp->proprietario.lingua,utente->lingua);
         tmp->listaPartecipanti = &(tmp->proprietario);
         
-        
+        //int fd[2];
+        //if(pipe(fd) < 0){perror("pipe fallita come te"); return "-1";}
+        //printf("C\n");
+        //close(fd[0]);
+        //printf("B\n");
+        //write(fd[1],"#ciao\0",6);
+        //printf("A\n");
         if(existStanza(listStanze,tmp) == 1){
             response = "-1";   
         }else{
             inserisciStanza(listStanze,tmp);
             response = "1";
+            pid_t pid = fork();
+            if(pid == 0){
+                //close(fd[1]);
+                //printf("Avvio partita...\n");
+                execlp(PATH_EXE_PARTITA, "PartitaEXE", "tmp" ,NULL);
+            }
         }
         
       
@@ -245,9 +262,6 @@ char* controlloRichiestaUtente(const char *input, Utente * utente) {
         response = "-1";
 
     }
-
-
-    PQfinish(conn);
     
     return response;
 
