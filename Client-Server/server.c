@@ -130,12 +130,13 @@ int mainServer() {
         close(server_fd);
         return -1;
     }
+    
     printf("Server in ascolto sulla porta %d...\n", PORT);
 
     while (1){
         //Utente utente;
         
-        printf("Server in atessa di un client...\n");
+        printf("\nServer in atessa di un client...\n");
 
         int *new_socket = malloc(sizeof(int));
         // Accetta la connessione da un client
@@ -235,23 +236,22 @@ char* controlloRichiestaUtente(const char *input, Utente * utente) {
         strcpy(tmp->proprietario.lingua,utente->lingua);
         tmp->listaPartecipanti = &(tmp->proprietario);
         
-        //int fd[2];
-        //if(pipe(fd) < 0){perror("pipe fallita come te"); return "-1";}
-        //printf("C\n");
-        //close(fd[0]);
-        //printf("B\n");
-        //write(fd[1],"#ciao\0",6);
-        //printf("A\n");
+        int fd[2];
+        if(pipe(fd) < 0){perror("pipe fallita come te"); return "-1";}
+        write(fd[1],tmp,sizeof(Stanza));
+
         if(existStanza(listStanze,tmp) == 1){
-            response = "-1";   
+            response = "-1";  
+             
         }else{
             inserisciStanza(listStanze,tmp);
             response = "1";
             pid_t pid = fork();
             if(pid == 0){
-                //close(fd[1]);
-                //printf("Avvio partita...\n");
-                execlp(PATH_EXE_PARTITA, "PartitaEXE", "tmp" ,NULL);
+                char fd_str[32];
+                sprintf(fd_str, "%d", fd[0]);
+                printf("Avvio partita...\n");
+                execlp(PATH_EXE_PARTITA, "PartitaEXE", fd_str ,NULL);
             }
         }
         

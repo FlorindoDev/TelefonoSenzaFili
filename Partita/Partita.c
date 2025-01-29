@@ -7,8 +7,8 @@
 
 
 int main(int argc, char *argv[]){
-    //char line[6];
-    //read(atoi(argv[1]), line, sizeof(line));
-    printf("porco dio: %s\n", argv[1]);
+    Stanza s;
+    read(atoi(argv[1]), &s, sizeof(Stanza));
+    printf("porco dio: %d\n", s.stato);
     return 0;
 }
