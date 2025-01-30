@@ -5,7 +5,7 @@
 #include <arpa/inet.h>
 #include <pthread.h>
 
-//outidodpollo
+//napoli
 
 #include "../Librerie/Autenticazione/auth.h"
 #include "../Librerie/connessioneDB/connectionDB.h"
