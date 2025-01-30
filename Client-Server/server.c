@@ -242,7 +242,7 @@ char* controlloRichiestaUtente(const char *input, Utente * utente) {
 
         if(existStanza(listStanze,tmp) == 1){
             response = "-1";  
-             
+
         }else{
             inserisciStanza(listStanze,tmp);
             response = "1";
