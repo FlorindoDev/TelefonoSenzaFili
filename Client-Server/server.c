@@ -5,7 +5,7 @@
 #include <arpa/inet.h>
 #include <pthread.h>
 
-//outidodtyuyiofudioyufd2222
+//outidodpollo
 
 #include "../Librerie/Autenticazione/auth.h"
 #include "../Librerie/connessioneDB/connectionDB.h"
