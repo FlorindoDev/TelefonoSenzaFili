@@ -57,7 +57,6 @@ char*  showStanze(ListStanze* liststanze){
     strcpy(res,"");
 
     while(tmp != NULL){
-        printf("%s (%u)",tmp->nomeStanza,tmp->port);
         sprintf(message, "%s (%u):",tmp->nomeStanza,tmp->port);
         strcat(res,message);
 

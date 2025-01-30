@@ -244,15 +244,29 @@ char* controlloRichiestaUtente(const char *input, Utente * utente) {
             response = "-1";  
 
         }else{
-            inserisciStanza(listStanze,tmp);
-            response = "1";
+
+        
             pid_t pid = fork();
             if(pid == 0){
                 char fd_str[32];
+                char fd_str2[32];
                 sprintf(fd_str, "%d", fd[0]);
+                sprintf(fd_str2, "%d", fd[1]);
                 printf("Avvio partita...\n");
-                execlp(PATH_EXE_PARTITA, "PartitaEXE", fd_str ,NULL);
+                execlp(PATH_EXE_PARTITA, "PartitaEXE", fd_str, fd_str2 ,NULL);
             }
+            sleep(1);
+            struct sockaddr_in server_addr_stanza;
+            memset(&server_addr_stanza, 0, sizeof(server_addr_stanza));
+
+            read(fd[0],&(server_addr_stanza.sin_port),sizeof(server_addr_stanza.sin_port));
+            printf("porta: %d\n", ntohs(server_addr_stanza.sin_port));
+            tmp->port=ntohs(server_addr_stanza.sin_port);
+            tmp->pid_proccesso_stanza=pid;
+            inserisciStanza(listStanze,tmp);
+
+            response = "1";
+
         }
         
       
