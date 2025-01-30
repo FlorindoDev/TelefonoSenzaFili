@@ -5,7 +5,7 @@
 #include <arpa/inet.h>
 #include <pthread.h>
 
-//Florin
+//ehlkjtrhgljksetrljkg
 
 #include "../Librerie/Autenticazione/auth.h"
 #include "../Librerie/connessioneDB/connectionDB.h"
