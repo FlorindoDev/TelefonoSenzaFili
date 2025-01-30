@@ -5,7 +5,11 @@
 #include <arpa/inet.h>
 #include <pthread.h>
 
+<<<<<<< Updated upstream
 //napoli
+=======
+//noncicredo
+>>>>>>> Stashed changes
 
 #include "../Librerie/Autenticazione/auth.h"
 #include "../Librerie/connessioneDB/connectionDB.h"
