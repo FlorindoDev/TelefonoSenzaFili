@@ -235,6 +235,9 @@ char* controlloRichiestaUtente(const char *input, Utente * utente) {
         strcpy(tmp->proprietario.password,utente->password);
         strcpy(tmp->proprietario.lingua,utente->lingua);
         tmp->listaPartecipanti = &(tmp->proprietario);
+
+        token = strtok_r(NULL, ":", &saveptr);
+        tmp->direzione = atoi(token);
         
         int fd[2];
         if(pipe(fd) < 0){perror("pipe fallita come te"); return "-1";}

@@ -7,6 +7,7 @@ typedef struct Utente{
     char lingua[50];
     char funzione[50];
     struct Utente * next;
+    struct Utente * prev;
 }Utente;
 
 #endif

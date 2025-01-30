@@ -15,6 +15,11 @@ enum Stato {
     CHIUSA
 };
 
+enum Direzione {
+    ASC,
+    DESC
+};
+
 
 
 typedef struct Stanza{
@@ -25,6 +30,9 @@ typedef struct Stanza{
     pid_t pid_proccesso_stanza;
     unsigned short int port;
     unsigned short int num_players;
+    enum Direzione direzione;
+
+
     struct Stanza * next;
     
 }Stanza;

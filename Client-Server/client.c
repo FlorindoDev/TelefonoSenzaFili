@@ -245,7 +245,7 @@ int entraStanzaGioco(){
     
     chiudiSocket();
 
-    printf("\n STANZE ESISTENTI: [nome (porta)] \n");
+    printf("\nSTANZE ESISTENTI: [nome (porta)] \n");
 
     char *token = strtok(buffer, ":");
     unsigned long int i = 1;
@@ -303,6 +303,25 @@ int creaStanzaGioco(){
     printf("\n(%s)\n",stanza.nomeStanza);
 
     stanza.stato = CREATA;
+
+    int scelta = 0;
+    do{
+        // Chiedere il nome
+        printf("Inserisci direzione : \n 1) Asc; \n 2) Desc ; \nRisposta : ");
+        scanf("%d",&scelta);
+
+        if(scelta != 1 && scelta != 2){
+            printf("ERRORE :  metti 1 o 2; \n");
+        }
+
+    }while(scelta != 1 && scelta != 2);
+    
+    if(scelta == 1){
+        stanza.direzione = ASC;
+    }else{
+        stanza.direzione = DESC;
+    }
+
 
     char message[BUFFER_SIZE];
     creaComando(message,"create");
@@ -383,6 +402,11 @@ void creaComando(char* message , char* funzione){
     strcat(message,":");
 
     strcmp(stanza.nomeStanza,"") ? strcat(message,stanza.nomeStanza) : strcat(message," ");
+    strcat(message,":");
+
+    char dir[10];
+    sprintf(dir,"%d",stanza.direzione);
+    strcmp(dir,"") ? strcat(message,dir) : strcat(message," ");
     strcat(message,":");
     
     
