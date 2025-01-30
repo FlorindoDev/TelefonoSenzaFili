@@ -62,7 +62,7 @@ int main(int argc, char *argv[]){
     
 
 
-    // Metti il server in ascolto
+    /*// Metti il server in ascolto
     if (listen(server_fd, 5) < 0) {
         perror("Errore nella listen");
         close(server_fd);
@@ -96,7 +96,7 @@ int main(int argc, char *argv[]){
         }
         
 
-    }
+    }*/
 
 
 
