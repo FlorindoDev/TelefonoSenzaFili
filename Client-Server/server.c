@@ -10,7 +10,7 @@
 #include "../Librerie/connessioneDB/connectionDB.h"
 #include "../Librerie/Stanze/Stanze.h"
 #include "../Librerie/Utente.h"
-//cane
+//cane3223
 #define PORT 8080
 #define BUFFER_SIZE 2048
 #define PATH_EXE_PARTITA "./PartitaEXE"
