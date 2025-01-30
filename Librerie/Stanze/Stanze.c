@@ -4,6 +4,7 @@
 void inserisciStanza(ListStanze* liststanze, Stanza* new){
     
     pthread_mutex_lock(&(liststanze->light));
+    new->stato = CREATA;
     if(liststanze->next == NULL){
         new->next=NULL;
         liststanze->next = new;
