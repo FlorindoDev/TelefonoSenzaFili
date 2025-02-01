@@ -2,7 +2,7 @@
 #define STANZE_H
 
 #include <pthread.h>
-#include "../Utente.h"
+#include "../Utente/Utente.h"
 
 #define MAX_LEN 50
 
@@ -31,8 +31,7 @@ typedef struct Stanza{
     unsigned short int port;
     unsigned short int num_players;
     enum Direzione direzione;
-
-
+    pthread_mutex_t light;
     struct Stanza * next;
     
 }Stanza;
@@ -92,6 +91,16 @@ ListStanze * freeStanze(ListStanze* liststanze);
 `return` la stringa formattata
 */
 char*  showStanze(ListStanze* liststanze);
+
+/*
+stampa la lista di stanze 
+*/
+void printStanze(ListStanze* liststanze);
+
+/*
+inizializza stanza
+*/
+void initStanza(Stanza * stanza, Utente* utente, char * nomeStanza, enum Direzione dir, pid_t pid, unsigned short int port);
 
 #include "Stanze.c"
 

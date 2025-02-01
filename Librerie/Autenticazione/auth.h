@@ -2,7 +2,7 @@
 #define AUTH_H
 
 #include <string.h>
-#include "../Utente.h"
+#include "../Utente/Utente.h"
 
 int login(PGconn *conn,Utente*);
 

@@ -4,7 +4,8 @@
 void inserisciStanza(ListStanze* liststanze, Stanza* new){
     
     pthread_mutex_lock(&(liststanze->light));
-    new->stato = CREATA;
+    new->stato = SOSPESA;
+    pthread_mutex_init(&(new->light), NULL);
     if(liststanze->next == NULL){
         new->next=NULL;
         liststanze->next = new;
@@ -118,4 +119,31 @@ ListStanze* freeStanze(ListStanze* liststanze){
     pthread_mutex_destroy(&(liststanze->light));
     free(liststanze);
     return NULL;
+}
+
+void printStanze(ListStanze* liststanze){
+
+    pthread_mutex_lock(&(liststanze->light));
+    Stanza * s = liststanze->next;
+    printf("[LISTA]");
+    while(s != NULL){
+        printf(" ->%s(%s) ",s->nomeStanza,s->proprietario.nome);
+        s = s->next;
+    }
+    
+    printf(" -|\n");
+    pthread_mutex_unlock(&(liststanze->light));
+}
+
+void initStanza(Stanza * stanza, Utente* utente, char * nomeStanza, enum Direzione dir, pid_t pid, unsigned short int port){
+    
+    strcpy(stanza->proprietario.nome,utente->nome);
+    strcpy(stanza->proprietario.password,utente->password);
+    strcpy(stanza->proprietario.lingua,utente->lingua);
+    strcpy(stanza->nomeStanza,nomeStanza);
+    stanza->listaPartecipanti = &(stanza->proprietario);
+    stanza->direzione = dir;
+    stanza->port = port;
+    
+
 }

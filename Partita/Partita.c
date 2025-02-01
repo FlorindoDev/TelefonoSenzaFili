@@ -5,12 +5,96 @@
 #include <arpa/inet.h>
 
 #include "../Librerie/Stanze/Stanze.h"
-
+//#include "../Librerie/ThreadConnessione/ThreadConnessione.h"
 
 
 int server_fd;
 struct sockaddr_in server_addr;
 socklen_t addr_len = sizeof(server_addr);
+Stanza stanza_corrente;
+
+
+
+/*
+
+char* riceviRisposta(){
+
+    int charPassati = read(sock, buffer, BUFFER_SIZE);
+        if (charPassati < BUFFER_SIZE){
+            buffer[charPassati]='\0';
+        }
+    printf("Risposta dal server: %s\n", buffer);
+    return buffer;
+}
+
+void gestioneNuovaConnessione(int socket, char * buffer, Utente * utente);
+
+
+
+void * Thread_GestioneNuovaConnessione(void *args){
+    GestioneConnesioneArgs * arg=(GestioneConnesioneArgs *) args;
+
+    //aggunta handler per rupulire risorse allocate per il thread
+    pthread_cleanup_push(cleanup_handler_connection, args);
+    
+    //lavoro
+    gestioneNuovaConnessione(arg->socket,arg->buffer,&(arg->utente));
+
+
+    //utilizzo del henadler prima della chiusura
+    pthread_cleanup_pop(1);  
+    pthread_exit(NULL);
+}
+
+
+void addPlayerToParty(Utente * utente){
+
+
+
+}
+
+void broadcast(int * sender_socket, char * sender_messagge){
+
+    pthread_mutex_lock(&(stanza_corrente->light));
+    Utente * in_esame = stanza_corrente->listaPartecipanti;
+    for(int i=0;i<stanza_corrente->num_players;i++){
+        in_esame = getNext(in_esame);
+        int user_socket = getUserSocket(in_esame);
+        if(user_socket != *sender_socket) send(user_socket, sender_messagge, strlen(sender_messagge), 0);
+        
+    }
+    pthread_mutex_unlock(&(stanza_corrente->light));
+}
+
+Stato getStato(){
+    pthread_mutex_lock(&(stanza_corrente->light));
+    Stato tmp = stanza_corrente.stato;
+    pthread_mutex_unlock(&(stanza_corrente->light));
+    return tmp;
+}
+
+void chatParty(int * socket, char * buffer, Utente * utente){
+    
+    while(getStato() == SOSPESA){
+        riceviRisposta(*socket, buffer, BUFFER_SIZE);
+        broadcast(socket,buffer);
+    }
+    
+
+}
+
+void gestioneNuovaConnessione(int socket, char * buffer, Utente * utente){
+
+    if(getStato() == SOSPESA){
+        addPlayerToParty();
+        chatParty();
+        Game();
+
+    }
+    
+
+}
+*/
 
 int AperturaSocket(){   
 
@@ -51,18 +135,21 @@ int AperturaSocket(){
 
 
 int main(int argc, char *argv[]){
-    Stanza s;
+    
+
+    
     int pipe_read = atoi(argv[1]);
     int pipe_write = atoi(argv[2]);
-    read(pipe_read, &s, sizeof(Stanza));
-    printf("porco dio: %s\n", s.nomeStanza);
+    read(pipe_read, &stanza_corrente, sizeof(Stanza));
     
     AperturaSocket();
+    printf("porta stanza: %d\n", ntohs(server_addr.sin_port));
+
     write(pipe_write,&(server_addr.sin_port),sizeof(server_addr.sin_port));
     
 
-
-    /*// Metti il server in ascolto
+    /*
+    // Metti il server in ascolto
     if (listen(server_fd, 5) < 0) {
         perror("Errore nella listen");
         close(server_fd);
@@ -72,33 +159,14 @@ int main(int argc, char *argv[]){
     printf("Server in ascolto sulla porta %d...\n", ntohs(server_addr_stanza.sin_port));
 
     while (1){
-        //Utente utente;
+    
         
-        printf("\nSta in atessa di un client...\n");
-
-        int *new_socket = malloc(sizeof(int));
-        // Accetta la connessione da un client
-        if ((*new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen)) < 0) {
-            perror("Errore nell'accept");
-            
-        }else{
-            printf("client accettato %d...\n", PORT);
-            pthread_t thread;
-            
-            GestioneConnesioneArgs * arg = initArg(new_socket);
-            if (pthread_create(&thread, NULL, Thread_GestioneNuovaConnessione, arg) != 0) {
-                perror("Errore nella creazione del thread");
-                return 1;
-            }
-        
-            pthread_detach(thread);
-            
-        }
+        assignConnectionToThread(server_fd,server_addr,server_addr);
         
 
-    }*/
+    }
 
-
+    */
 
 
     close(server_fd);
