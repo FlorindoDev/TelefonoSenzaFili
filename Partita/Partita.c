@@ -5,7 +5,7 @@
 #include <arpa/inet.h>
 
 #include "../Librerie/Stanze/Stanze.h"
-//#include "../Librerie/ThreadConnessione/ThreadConnessione.h"
+#include "../Librerie/ThreadConnessione/ThreadConnessione.h"
 
 
 int server_fd;
@@ -14,8 +14,6 @@ socklen_t addr_len = sizeof(server_addr);
 Stanza stanza_corrente;
 
 
-
-/*
 
 char* riceviRisposta(){
 
@@ -94,7 +92,7 @@ void gestioneNuovaConnessione(int socket, char * buffer, Utente * utente){
     
 
 }
-*/
+
 
 int AperturaSocket(){   
 
@@ -148,7 +146,7 @@ int main(int argc, char *argv[]){
     write(pipe_write,&(server_addr.sin_port),sizeof(server_addr.sin_port));
     
 
-    /*
+    
     // Metti il server in ascolto
     if (listen(server_fd, 5) < 0) {
         perror("Errore nella listen");
@@ -166,7 +164,6 @@ int main(int argc, char *argv[]){
 
     }
 
-    */
 
 
     close(server_fd);

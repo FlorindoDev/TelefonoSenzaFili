@@ -147,3 +147,8 @@ void initStanza(Stanza * stanza, Utente* utente, char * nomeStanza, enum Direzio
     
 
 }
+
+
+Utente * getNext(Utente * utente){
+    if(utente != NULL)return utente->next;
+}

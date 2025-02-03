@@ -102,6 +102,11 @@ inizializza stanza
 */
 void initStanza(Stanza * stanza, Utente* utente, char * nomeStanza, enum Direzione dir, pid_t pid, unsigned short int port);
 
+
+Utente * getNext(Utente * Utente);
+
+
+
 #include "Stanze.c"
 
 #endif
