@@ -5,6 +5,7 @@
 #include "../Utente/Utente.h"
 
 #define MAX_LEN 50
+#define PATH_EXE_PARTITA "./PartitaEXE"
 
 
 enum Stato {
@@ -63,7 +64,7 @@ Prende:
 - `check`: controlla se questo nodo è nella lista
 `return` ritorna `0` se non esiste e `1` se esiste
 */
-int existStanza(ListStanze* liststanze, Stanza* check);
+int existStanza(ListStanze* liststanze, char * nomeStanza);
 
 /*
 Inizializza la testa della lista
@@ -100,10 +101,14 @@ void printStanze(ListStanze* liststanze);
 /*
 inizializza stanza
 */
-void initStanza(Stanza * stanza, Utente* utente, char * nomeStanza, enum Direzione dir, pid_t pid, unsigned short int port);
+void initStanza(Stanza * stanza, Utente* utente, char * nomeStanza, enum Direzione dir, int * fd);
 
 
 Utente * getNext(Utente * Utente);
+
+pid_t creazioneProcessoStanza(int* fd);
+
+int returnPortaPartita(int* fd);
 
 
 

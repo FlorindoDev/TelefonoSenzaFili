@@ -29,7 +29,7 @@ int gioca();
 void creaComando(char*  , char* );
 
 //Funzioni per gestione socket
-int creaSocket();
+int creaSocket(int);
 int chiudiSocket();
 char* riceviRisposta();
 void mandaMessaggio(char*);
@@ -105,7 +105,7 @@ int login(){
     char message[BUFFER_SIZE];
     creaComando(message,"login");
 
-    int successo = creaSocket();
+    int successo = creaSocket(PORT);
 
     if(successo != -1){
         
@@ -148,7 +148,7 @@ int signUp(){
     char message[BUFFER_SIZE];
     creaComando(message,"signup");
 
-    int successo = creaSocket();
+    int successo = creaSocket(PORT);
     
     if (successo != -1){
 
@@ -227,7 +227,7 @@ int entraStanzaGioco(){
     char message[BUFFER_SIZE];
     creaComando(message,"show");
 
-    int successo = creaSocket();
+    int successo = creaSocket(PORT);
 
     if(successo != -1){
         
@@ -244,7 +244,7 @@ int entraStanzaGioco(){
     
     chiudiSocket();
 
-    printf("\nSTANZE ESISTENTI: [nome (porta)] \n");
+    printf("\nSTANZE ESISTENTI: [nome (codice stanza)] \n");
 
     char *token = strtok(buffer, ":");
     unsigned long int i = 1;
@@ -253,19 +253,15 @@ int entraStanzaGioco(){
         token = strtok(NULL, ":");
     }
     
-    printf("Inserisci nome stanza in cui vuoi entrare : ");
-
-    //Pulire buffer
-    char c;
-    while ((c = getchar()) != '\n' && c != EOF);
+    printf("Inserisci codice stanza in cui vuoi entrare : ");
     
-    scanf("%[^\n]",stanza.nomeStanza);
+    scanf("%d",stanza.port);
     
 
     message[BUFFER_SIZE];
     creaComando(message,"join");
 
-    successo = creaSocket();
+    successo = creaSocket(stanza.port);
 
     if(successo != -1){
         
@@ -275,9 +271,8 @@ int entraStanzaGioco(){
         // Riceve la risposta dal server
         riceviRisposta();
         
-        chiudiSocket();
 
-        return strcmp("-1",buffer) ? 1 : -1;
+        return strcmp("-1",buffer) ? 1 : -1; //ok dal server
     }
     
 
@@ -325,7 +320,7 @@ int creaStanzaGioco(){
     char message[BUFFER_SIZE];
     creaComando(message,"create");
 
-    int successo = creaSocket();
+    int successo = creaSocket(PORT);
 
     if(successo != -1){
         
@@ -353,7 +348,7 @@ int gioca(){
 }
 
 
-int creaSocket(){
+int creaSocket(int port){
     
     // Creazione della socket
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
@@ -366,7 +361,7 @@ int creaSocket(){
     // Configurazione dell'indirizzo del server
     memset(&serv_addr, 0, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(PORT);
+    serv_addr.sin_port = htons(port);
     serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
     
     // Connessione al server

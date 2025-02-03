@@ -16,7 +16,6 @@
 
 //il BUFFER_SIZE STA IN ThreadConnessione
 #define PORT 8080
-#define PATH_EXE_PARTITA "./PartitaEXE"
  
 
 ListStanze* listStanze = NULL;
@@ -149,23 +148,19 @@ char* controlloRichiestaUtente(const char *input, Utente * utente) {
         
         //array che contiene i file descriptor delle pipe
         int fd[2];
-        if(pipe(fd) < 0){perror("pipe fallita come te"); return "-1";}
+        if(pipe(fd) < 0){
+            perror("errore nella creazione della pipe"); 
+            return "-1";
+        }
 
-        
-        write(fd[1],tmp,sizeof(Stanza));
 
-        if(existStanza(listStanze,tmp) == 1){
+        if(existStanza(listStanze,msg.nomeStanza) == 1){
             response = "-1";  
 
         }else{
 
-            pid_t pid = creazioneProcessoStanza(fd);
-            
-            sleep(1);
 
-            unsigned short int port=returnPortaPartita(fd);
-
-            initStanza(tmp,utente,msg.nomeStanza,msg.direzione,pid,port);
+            initStanza(tmp,utente,msg.nomeStanza,msg.direzione,fd);
 
             inserisciStanza(listStanze,tmp);
 
@@ -185,6 +180,9 @@ char* controlloRichiestaUtente(const char *input, Utente * utente) {
     }else if (strcmp(utente->funzione,"join") == 0){
         
         //To do
+
+
+        //msg.nomeStanza
       
     
         response = "-1";
@@ -199,26 +197,4 @@ char* controlloRichiestaUtente(const char *input, Utente * utente) {
 
 }
 
-int returnPortaPartita(int* fd){
 
-    struct sockaddr_in server_addr_stanza;
-    memset(&server_addr_stanza, 0, sizeof(server_addr_stanza));
-    
-    //legge dal file la porta in cui è un ascolto la stanza creata tramite la PIPE
-    read(fd[0],&(server_addr_stanza.sin_port),sizeof(server_addr_stanza.sin_port));
-
-    return ntohs(server_addr_stanza.sin_port);
-}
-
-pid_t creazioneProcessoStanza(int* fd){
-    pid_t pid = fork();
-    if(pid == 0){
-        char fd_str[32];
-        char fd_str2[32];
-        sprintf(fd_str, "%d", fd[0]);
-        sprintf(fd_str2, "%d", fd[1]);
-        printf("Avvio partita...\n");
-        execlp(PATH_EXE_PARTITA, "PartitaEXE", fd_str, fd_str2 ,NULL);
-    }
-    return pid;
-}

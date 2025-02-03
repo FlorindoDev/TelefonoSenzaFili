@@ -15,7 +15,7 @@ Stanza stanza_corrente;
 
 
 
-char* riceviRisposta(){
+char* riceviRisposta(int sock,char* buffer){
 
     int charPassati = read(sock, buffer, BUFFER_SIZE);
         if (charPassati < BUFFER_SIZE){
@@ -34,9 +34,12 @@ void * Thread_GestioneNuovaConnessione(void *args){
 
     //aggunta handler per rupulire risorse allocate per il thread
     pthread_cleanup_push(cleanup_handler_connection, args);
+
+    char* risposta = riceviRisposta(arg->socket,arg->buff);
+    Message msg = dividiStringa(risposta,":",sizeof(risposta));
     
     //lavoro
-    gestioneNuovaConnessione(arg->socket,arg->buffer,&(arg->utente));
+    gestioneNuovaConnessione(arg->socket,arg->buffer,msg);
 
 
     //utilizzo del henadler prima della chiusura
@@ -81,10 +84,18 @@ void chatParty(int * socket, char * buffer, Utente * utente){
 
 }
 
-void gestioneNuovaConnessione(int socket, char * buffer, Utente * utente){
+void addPlayerToParty(Utente utente){
+    
+}
+
+void gestioneNuovaConnessione(int socket, char * buffer, Message msg){
+
+    Utente utente;
+    initUtente(&utente,msg.nome,msg.password,msg.lingua,msg.funzione);
 
     if(getStato() == SOSPESA){
-        addPlayerToParty();
+        
+        addPlayerToParty(utente);
         chatParty();
         Game();
 
@@ -148,26 +159,28 @@ int main(int argc, char *argv[]){
 
     
     // Metti il server in ascolto
+    
     if (listen(server_fd, 5) < 0) {
         perror("Errore nella listen");
         close(server_fd);
         return -1;
     }
     
+    
     printf("Server in ascolto sulla porta %d...\n", ntohs(server_addr_stanza.sin_port));
 
     while (1){
     
-        
         assignConnectionToThread(server_fd,server_addr,server_addr);
-        
 
     }
 
-
+    
 
     close(server_fd);
+
     return 0;
+
 }
 
 

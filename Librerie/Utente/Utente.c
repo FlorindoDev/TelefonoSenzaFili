@@ -9,3 +9,7 @@ void initUtente(Utente * utente,char nome[MAX_UTENTE], char password[MAX_UTENTE]
     strcpy(utente->funzione,funzione);
 
 }
+
+int getUserSocket(Utente * utente){
+    return utente->socket;
+}

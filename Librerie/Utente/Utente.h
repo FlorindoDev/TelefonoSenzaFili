@@ -15,6 +15,8 @@ typedef struct Utente{
 
 void initUtente(Utente * utente, char nome[MAX_UTENTE], char password[MAX_UTENTE] ,char lingua[MAX_UTENTE], char funzione[MAX_UTENTE]);
 
+int getUserSocket(Utente * utente);
+
 #include "Utente.c"
 
 #endif

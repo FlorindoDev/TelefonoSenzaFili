@@ -19,7 +19,7 @@ void inserisciStanza(ListStanze* liststanze, Stanza* new){
 }
 
 
-int existStanza(ListStanze* liststanze, Stanza* check){
+int existStanza(ListStanze* liststanze, char * nomeStanza){
 
     pthread_mutex_lock(&(liststanze->light));
     if(liststanze->next == NULL){
@@ -28,7 +28,7 @@ int existStanza(ListStanze* liststanze, Stanza* check){
     }
     Stanza *tmp = liststanze->next;
     while(tmp != NULL){
-        if(strcmp(tmp->nomeStanza,check->nomeStanza) == 0){
+        if(strcmp(tmp->nomeStanza,nomeStanza) == 0){
             pthread_mutex_unlock(&(liststanze->light));
             return 1;
         }
@@ -135,7 +135,7 @@ void printStanze(ListStanze* liststanze){
     pthread_mutex_unlock(&(liststanze->light));
 }
 
-void initStanza(Stanza * stanza, Utente* utente, char * nomeStanza, enum Direzione dir, pid_t pid, unsigned short int port){
+void initStanza(Stanza * stanza, Utente* utente, char * nomeStanza, enum Direzione dir,int* fd){
     
     strcpy(stanza->proprietario.nome,utente->nome);
     strcpy(stanza->proprietario.password,utente->password);
@@ -143,7 +143,12 @@ void initStanza(Stanza * stanza, Utente* utente, char * nomeStanza, enum Direzio
     strcpy(stanza->nomeStanza,nomeStanza);
     stanza->listaPartecipanti = &(stanza->proprietario);
     stanza->direzione = dir;
-    stanza->port = port;
+
+
+    stanza->pid_proccesso_stanza = creazioneProcessoStanza(fd);
+    write(fd[1],stanza,sizeof(Stanza));
+    sleep(1);
+    stanza->port = returnPortaPartita(fd);
     
 
 }
@@ -151,4 +156,28 @@ void initStanza(Stanza * stanza, Utente* utente, char * nomeStanza, enum Direzio
 
 Utente * getNext(Utente * utente){
     if(utente != NULL)return utente->next;
+}
+
+pid_t creazioneProcessoStanza(int* fd){
+    pid_t pid = fork();
+    if(pid == 0){
+        char fd_str[32];
+        char fd_str2[32];
+        sprintf(fd_str, "%d", fd[0]);
+        sprintf(fd_str2, "%d", fd[1]);
+        printf("Avvio partita...\n");
+        execlp(PATH_EXE_PARTITA, "PartitaEXE", fd_str, fd_str2 ,NULL);
+    }
+    return pid;
+}
+
+int returnPortaPartita(int* fd){
+
+    struct sockaddr_in server_addr_stanza;
+    memset(&server_addr_stanza, 0, sizeof(server_addr_stanza));
+    
+    //legge dal file la porta in cui è un ascolto la stanza creata tramite la PIPE
+    read(fd[0],&(server_addr_stanza.sin_port),sizeof(server_addr_stanza.sin_port));
+
+    return ntohs(server_addr_stanza.sin_port);
 }
