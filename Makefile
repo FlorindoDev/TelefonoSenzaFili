@@ -11,7 +11,7 @@ client: Client-Server/client.c
 	$(CC) -o client Client-Server/client.c
 
 PartitaEXE: Partita/Partita.c
-	$(CC) -o PartitaEXE Partita/Partita.c
+	$(CC) -o PartitaEXE Partita/Partita.c $(LDFLAGS)
 
 clean:
 	rm -f my_program client PartitaEXE

@@ -20,6 +20,14 @@ typedef struct Message{
 
 Message dividiStringa(const char *input, char separatore[MAX_SEPRATORE], int dimensione);
 
+int isLogin(Message* msg);
+
+int isSingUp(Message * msg);
+
+int isCreate(Message * msg);
+
+int isShow(Message * msg);
+
 #include "MessageEditor.c"
 
 #endif

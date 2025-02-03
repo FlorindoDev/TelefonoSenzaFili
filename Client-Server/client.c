@@ -255,7 +255,7 @@ int entraStanzaGioco(){
     
     printf("Inserisci codice stanza in cui vuoi entrare : ");
     
-    scanf("%d",stanza.port);
+    scanf("%hu", &(stanza.port));
     
 
     message[BUFFER_SIZE];

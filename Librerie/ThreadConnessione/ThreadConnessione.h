@@ -12,15 +12,15 @@
 /*
     Quello che neccessita un thread per gestire la connessione
 */
-typedef struct GestioneConnesioneArgs{
+typedef struct GestioneConnessioneArgs{
     int * socket;
     char buffer[BUFFER_SIZE];
     Utente utente;
 
-}GestioneConnesioneArgs;
+}GestioneConnessioneArgs;
 
 /*
-    pulische GestioneConnesioneArgs che è stata creata per quella connessione
+    pulische GestioneConnessioneArgs che è stata creata per quella connessione
 */
 void cleanup_handler_connection(void *args);
 
@@ -34,7 +34,7 @@ void * Thread_GestioneNuovaConnessione(void *args);
     Funzione eseguita dal thread
     `NOTA BENE` se implementi `THREADCONNESSIONE_H` dovrai implementare TU questa funzione
 */
-GestioneConnesioneArgs * initArg(int * new_socket);
+GestioneConnessioneArgs * initArg(int * new_socket);
 
 /*
     Assgena i file descriptor della connessione a un thread
@@ -45,7 +45,7 @@ GestioneConnesioneArgs * initArg(int * new_socket);
     `address`: è la struttura sockaddr_in che contiene le specidiche del client che si vuole connettere
     `addrlen`: la lungezza di address
 */
-void assignConnectionToThread(int server_fd, struct sockaddr_in address, int addrlen);
+void assignConnectionToThread(int server_fd, struct sockaddr_in address, socklen_t addrlen);
 
 
 #include "ThreadConnessione.c"

@@ -1,20 +1,20 @@
 
-GestioneConnesioneArgs * initArg(int * new_socket){
-    GestioneConnesioneArgs * tmp = (GestioneConnesioneArgs *)malloc(sizeof(GestioneConnesioneArgs));
+GestioneConnessioneArgs * initArg(int * new_socket){
+    GestioneConnessioneArgs * tmp = (GestioneConnessioneArgs *)malloc(sizeof(GestioneConnessioneArgs));
     tmp->socket=new_socket;
     return tmp;
 }
 
 
 void cleanup_handler_connection(void *args){
-    GestioneConnesioneArgs * arg=(GestioneConnesioneArgs *) args;
+    GestioneConnessioneArgs * arg=(GestioneConnessioneArgs *) args;
     printf("sto pulendo sono %lu\n", pthread_self());
     free(arg->socket);
     free(arg);
 }
 
 
-void assignConnectionToThread(int server_fd, struct sockaddr_in address, int addrlen){
+void assignConnectionToThread(int server_fd, struct sockaddr_in address, socklen_t addrlen){
     printf("\nServer in atessa di un client...\n");
     int *new_socket = malloc(sizeof(int));
 
@@ -27,7 +27,7 @@ void assignConnectionToThread(int server_fd, struct sockaddr_in address, int add
         printf("client accettato...\n");
         pthread_t thread;
         
-        GestioneConnesioneArgs * arg = initArg(new_socket);
+        GestioneConnessioneArgs * arg = initArg(new_socket);
         if (pthread_create(&thread, NULL, Thread_GestioneNuovaConnessione, arg) != 0) {
             perror("Errore nella creazione del thread");
             return;

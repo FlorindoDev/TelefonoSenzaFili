@@ -51,7 +51,7 @@ Message dividiStringa(const char *input, char separatore[MAX_SEPRATORE], int dim
 
     token = strtok_r(NULL, ":", &saveptr);
     strcpy(msg.lingua,token);
-
+    
 
     token = strtok_r(NULL, ":", &saveptr);
     strcpy(msg.nomeStanza,token);
@@ -61,5 +61,21 @@ Message dividiStringa(const char *input, char separatore[MAX_SEPRATORE], int dim
 
     free(copia);
     return msg;
+}
+
+int isLogin(Message * msg){
+    return strcmp(msg->funzione,"login") ? 0 : 1;
+}
+
+int isSingUp(Message * msg){
+    return strcmp(msg->funzione,"signup") ? 0 : 1;
+}
+
+int isCreate(Message * msg){
+    return strcmp(msg->funzione,"create") ? 0 : 1;
+}
+
+int isShow(Message * msg){
+    return strcmp(msg->funzione,"show") ? 0 : 1;
 }
 

@@ -22,6 +22,8 @@ ListStanze* listStanze = NULL;
 
 
 char* controlloRichiestaUtente(const char *, Utente *);
+void registerUser(PGconn * , char *, Utente *);
+void loginUser(PGconn * , char *, Utente *);
 void gestioneNuovaConnessione(int* new_socket, char* buffer, Utente * utente);
 pid_t creazioneProcessoStanza(int* fd);
 int returnPortaPartita(int* fd);
@@ -35,7 +37,7 @@ int mainServer() {
 
     int server_fd;
     struct sockaddr_in address;
-    int addrlen = sizeof(address);
+    socklen_t addrlen = sizeof(address);
 
     
     // Creazione della socket
@@ -80,7 +82,7 @@ int mainServer() {
 
 //la definzione sta in `ThreadConnessione.h`
 void * Thread_GestioneNuovaConnessione(void *args){
-    GestioneConnesioneArgs * arg=(GestioneConnesioneArgs *) args;
+    GestioneConnessioneArgs * arg=(GestioneConnessioneArgs *) args;
 
     //aggunta handler per rupulire risorse allocate per il thread
     pthread_cleanup_push(cleanup_handler_connection, args);
@@ -115,6 +117,20 @@ void gestioneNuovaConnessione(int * new_socket, char* buffer, Utente * utente){
 
 }
 
+void loginUser(PGconn* conn, char * response, Utente * utente){
+    conn = connect_to_DB();
+    response = login(conn,utente) ? "1" : "-1";
+    PQfinish(conn);
+    
+}
+
+void registerUser(PGconn* conn, char * response, Utente * utente){
+    conn = connect_to_DB();
+    response = register_user(conn,utente) ? "1" : "-1";
+    PQfinish(conn);
+    
+}
+
 char* controlloRichiestaUtente(const char *input, Utente * utente) {
 
     char* response = "";
@@ -125,20 +141,17 @@ char* controlloRichiestaUtente(const char *input, Utente * utente) {
 
     initUtente(utente,msg.nome,msg.password,msg.lingua,msg.funzione);
 
-    if(strcmp(utente->funzione,"signup") == 0){
+    if(isSingUp(&msg)){
         
-        conn = connect_to_DB();
-        response = register_user(conn,utente) ? "1" : "-1";
-        PQfinish(conn);
+        registerUser(conn, response, utente);
 
 
-    }else if (strcmp(utente->funzione,"login") == 0){
+    }else if (isLogin(&msg)){
         
-        conn = connect_to_DB();
-        response = login(conn,utente) ? "1" : "-1";
-        PQfinish(conn);
+        loginUser(conn, response, utente);
+        
 
-    }else if (strcmp(utente->funzione,"create") == 0){
+    }else if (isCreate(&msg)){
         
         Stanza * tmp = (Stanza *) malloc(sizeof(Stanza));
         Utente * proprietario = (Utente *) malloc(sizeof(Utente));
@@ -170,7 +183,7 @@ char* controlloRichiestaUtente(const char *input, Utente * utente) {
         
       
         
-    }else if (strcmp(utente->funzione,"show") == 0){
+    }else if (isShow(&msg)){
       
         response = showStanze(listStanze);
 
