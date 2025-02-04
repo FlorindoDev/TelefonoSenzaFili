@@ -148,7 +148,7 @@ void initStanza(Stanza * stanza, Utente* utente, char * nomeStanza, enum Direzio
 
     stanza->pid_proccesso_stanza = creazioneProcessoStanza(fd);
     write(fd[1],stanza,sizeof(Stanza));
-    sleep(1/20);
+    sleep(1);
     stanza->port = returnPortaPartita(fd);
     
 
