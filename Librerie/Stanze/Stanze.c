@@ -187,13 +187,23 @@ Utente * getNextInOrder(ListStanze* liststanze, Utente * utente){
     Utente * prossimo = NULL;
     pthread_mutex_lock(&(liststanze->light));
     if(utente != NULL){
+        Utente * tmp = liststanze->next->listaPartecipanti;
+        while(strcmp(tmp->nome,utente->nome)!=0){
+            if(liststanze->next->direzione == ASC){
+                tmp = tmp->next;
+            }else{
+                tmp = tmp->prev;
+            }
+        }
+
         if(liststanze->next->direzione == ASC){
-            prossimo = utente->next;
+            prossimo = tmp->next;
         }else{
-            prossimo = utente->prev;
+            prossimo = tmp->prev;
         }
     }
     pthread_mutex_unlock(&(liststanze->light));
     return prossimo;
 
 }
+

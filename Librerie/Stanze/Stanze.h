@@ -129,6 +129,14 @@ da il prossimo del utente in base alla direzione
 */
 Utente * getNextInOrder(ListStanze* , Utente * );
 
+/*
+setta il prossimo del utente in base alla direzione
+- `ListStanze*`: puntatore alla lista 
+- `Utente*`: utente da voler inserire 
+`return` successo
+*/
+int setNextInOrder(ListStanze* , Utente * );
+
 
 
 #include "Stanze.c"
