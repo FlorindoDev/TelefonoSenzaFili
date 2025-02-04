@@ -207,3 +207,63 @@ Utente * getNextInOrder(ListStanze* liststanze, Utente * utente){
 
 }
 
+int existUtente(ListStanze* liststanze, char * nomeUtente){
+
+    pthread_mutex_lock(&(liststanze->light));
+    if(liststanze->next == NULL){
+        pthread_mutex_unlock(&(liststanze->light));
+        return 0;
+    }
+    Utente *tmp = liststanze->next->listaPartecipanti;
+    while(tmp != NULL){
+        if(strcmp(tmp->nome,nomeUtente) == 0){
+            pthread_mutex_unlock(&(liststanze->light));
+            return 1;
+        }
+        tmp = tmp->next;
+    }
+
+    pthread_mutex_unlock(&(liststanze->light));
+    return 0;
+}
+
+int setNextInOrder(ListStanze* liststanze, Utente * utente){
+    int res = -1;
+    Stanza * stanza = liststanze->next;
+    pthread_mutex_lock(&(liststanze->light));
+    if(utente != NULL){
+        if(stanza->listaPartecipanti == NULL){
+            stanza->proprietario = *utente;
+            stanza->listaPartecipanti=utente;
+            res = 1;
+        }else{
+            if (existUtente(liststanze,utente->nome) == 0){
+                Utente * prev = stanza->listaPartecipanti;
+                Utente * tmp = stanza->listaPartecipanti->next;
+                while(tmp != NULL){
+                    if(liststanze->next->direzione == ASC){
+                        tmp = tmp->next;
+                    }else{
+                        tmp = tmp->prev;
+                    }
+                    prev = tmp;
+                }
+
+                if(liststanze->next->direzione == ASC){
+                    prev->next = utente;
+                }else{
+                    prev->prev = utente;
+                }
+                res = 1;
+
+            }
+            
+            
+        }
+
+    }
+
+
+    pthread_mutex_unlock(&(liststanze->light));
+    return res;
+}

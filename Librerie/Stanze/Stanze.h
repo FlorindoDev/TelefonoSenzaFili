@@ -120,6 +120,7 @@ pid_t creazioneProcessoStanza(int* fd);
 
 int returnPortaPartita(int* fd);
 
+int existUtente(ListStanze* , char * );
 
 /*
 da il prossimo del utente in base alla direzione
