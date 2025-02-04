@@ -182,3 +182,18 @@ int returnPortaPartita(int* fd){
 
     return ntohs(server_addr_stanza.sin_port);
 }
+
+Utente * getNextInOrder(ListStanze* liststanze, Utente * utente){
+    Utente * prossimo = NULL;
+    pthread_mutex_lock(&(liststanze->light));
+    if(utente != NULL){
+        if(liststanze->next->direzione == ASC){
+            prossimo = utente->next;
+        }else{
+            prossimo = utente->prev;
+        }
+    }
+    pthread_mutex_unlock(&(liststanze->light));
+    return prossimo;
+
+}

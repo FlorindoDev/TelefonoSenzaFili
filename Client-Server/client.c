@@ -117,12 +117,7 @@ int login(){
         
         chiudiSocket();
     
-        if(strcmp("-1",buffer) == 0){
-            return -1;
-        }else{
-            return 1;
-
-        }
+        return strcmp("-1",buffer) ? 1 : -1; //ok dal server
     }
     
 
@@ -160,12 +155,7 @@ int signUp(){
         // Riceve la risposta dal server
         chiudiSocket();
 
-        if(strcmp("-1",buffer) == 0){
-            return -1;
-        }else{
-            return 1;
-
-        }
+        return strcmp("-1",buffer) ? 1 : -1; //ok dal server
     }
 
     chiudiSocket();
@@ -250,24 +240,26 @@ int mostraStanzaGioco(){
 
 
     }else{
+        chiudiSocket();
         return -1;
     }
     
     chiudiSocket();
 
+    //Inizzializzazione token , se e' -1 esco
     char *token = strtok(buffer, ":");
     if(strcmp(token,"-1") == 0){
         return -1;
     }
 
-    printf("\nSTANZE ESISTENTI: [nome (codice stanza)] \n");
 
-    
+    printf("\nSTANZE ESISTENTI: [nome (codice stanza)] \n");
     unsigned long int i = 1;
     while(token != NULL){
         printf(" %lu) %s\n",i++,token);
         token = strtok(NULL, ":");
     }
+    printf("\nFINE STANZE;\n");
     
     return 1;
 }

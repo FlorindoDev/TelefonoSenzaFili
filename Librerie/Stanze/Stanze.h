@@ -94,21 +94,40 @@ ListStanze * freeStanze(ListStanze* liststanze);
 char*  showStanze(ListStanze* liststanze);
 
 /*
-stampa la lista di stanze 
+stampa la lista di stanze
+- `liststanze*`: nodo iniziale(origine) 
 */
 void printStanze(ListStanze* liststanze);
 
 /*
 inizializza stanza
+- `stanza*`: puntatore alla stanza da inizializzare
+- `utente*`: puntatore al proprietario
+- `nomeStanza*`: stringa contenente nome della stanza
+- `dir`: enum per identificare la direzione del gioco
+- `fd*`: file descriptor
 */
 void initStanza(Stanza * stanza, Utente* utente, char * nomeStanza, enum Direzione dir, int * fd);
 
-
+/*
+da il next di Utente
+- `Utente*`: utente da voler vedere il next 
+`return` il next
+*/
 Utente * getNext(Utente * Utente);
 
 pid_t creazioneProcessoStanza(int* fd);
 
 int returnPortaPartita(int* fd);
+
+
+/*
+da il prossimo del utente in base alla direzione
+- `ListStanze*`: puntatore alla lista 
+- `Utente*`: utente da voler vedere il prossimo
+`return` il prossimo
+*/
+Utente * getNextInOrder(ListStanze* , Utente * );
 
 
 
