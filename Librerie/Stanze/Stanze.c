@@ -55,18 +55,19 @@ char*  showStanze(ListStanze* liststanze){
     char message[1024];
     char * res = (char *) malloc((1024)*sizeof(char));
  
-    Stanza * tmp = liststanze->next;printf("1");
-    strcpy(res,"");
+    Stanza * tmp = liststanze->next;
+    
+    if(tmp != NULL)
+        strcpy(res,"");
+    else    
+        strcpy(res,"-1");
 
     while(tmp != NULL){
         sprintf(message, "%s (%u):",tmp->nomeStanza,tmp->port);
         strcat(res,message);
 
-        tmp = tmp->next;printf("5");
+        tmp = tmp->next;
     }
-
-
-    
 
     pthread_mutex_unlock(&(liststanze->light));
     return res;

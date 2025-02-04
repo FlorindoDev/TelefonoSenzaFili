@@ -21,9 +21,9 @@ void homeShow();
 //Funzioni richieste dall'utente
 int login();
 int signUp();
-int entraStanzaGioco();
+int mostraStanzaGioco();
 int creaStanzaGioco();
-int gioca();
+int entraStanzaGioco();
 
 //Funzione creazione del messaggio ben formattato
 void creaComando(char*  , char* );
@@ -189,13 +189,22 @@ void homeShow(){
 
         switch (scelta) {
             case 1:
-                risultato = entraStanzaGioco();
+                risultato = mostraStanzaGioco();
                 if(risultato == -1){
-                    printf("ERRORE : stanza non esistente o inaccessibile");
+                    printf("ERRORE : nessuna stanza presente");
                 }else{
-                    printf("SUCCESSO : entrato in stanza");
+                    risultato = entraStanzaGioco();
+                    if(risultato == -1){
+                        printf("ERRORE : stanza non esistente o inaccessibile (controlla il codice)");
+                    }else{
+                        printf("SUCCESSO : entrato in stanza");
+                    }
+
                 }
-                risultato = gioca();
+                
+                
+                
+                
 
                 break;
             case 2:
@@ -222,7 +231,7 @@ void homeShow(){
 
 }
 
-int entraStanzaGioco(){
+int mostraStanzaGioco(){
     
     char message[BUFFER_SIZE];
     creaComando(message,"show");
@@ -240,28 +249,41 @@ int entraStanzaGioco(){
         chiudiSocket();
 
 
+    }else{
+        return -1;
     }
     
     chiudiSocket();
 
+    char *token = strtok(buffer, ":");
+    if(strcmp(token,"-1") == 0){
+        return -1;
+    }
+
     printf("\nSTANZE ESISTENTI: [nome (codice stanza)] \n");
 
-    char *token = strtok(buffer, ":");
+    
     unsigned long int i = 1;
     while(token != NULL){
         printf(" %lu) %s\n",i++,token);
         token = strtok(NULL, ":");
     }
     
+    return 1;
+}
+
+
+int entraStanzaGioco(){
+
     printf("Inserisci codice stanza in cui vuoi entrare : ");
     
     scanf("%hu", &(stanza.port));
     
 
-    message[BUFFER_SIZE];
+    char message[BUFFER_SIZE];
     creaComando(message,"join");
 
-    successo = creaSocket(stanza.port);
+    int successo = creaSocket(stanza.port);
 
     if(successo != -1){
         
@@ -277,7 +299,6 @@ int entraStanzaGioco(){
     
 
     chiudiSocket();
-
 
     return -1;
 }
@@ -341,11 +362,7 @@ int creaStanzaGioco(){
     return -1;
 }
 
-int gioca(){
 
-
-    return -1;
-}
 
 
 int creaSocket(int port){
