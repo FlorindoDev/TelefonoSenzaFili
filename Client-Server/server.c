@@ -22,8 +22,8 @@ ListStanze* listStanze = NULL;
 
 
 char* controlloRichiestaUtente(const char *, Utente *);
-void registerUser(PGconn * , char *, Utente *);
-void loginUser(PGconn * , char *, Utente *);
+char* registerUser(PGconn * , Utente *);
+char* loginUser(PGconn * , Utente *);
 void gestioneNuovaConnessione(int* new_socket, char* buffer, Utente * utente);
 pid_t creazioneProcessoStanza(int* fd);
 int returnPortaPartita(int* fd);
@@ -117,23 +117,24 @@ void gestioneNuovaConnessione(int * new_socket, char* buffer, Utente * utente){
 
 }
 
-void loginUser(PGconn* conn, char * response, Utente * utente){
+char * loginUser(PGconn* conn, Utente * utente){
     conn = connect_to_DB();
-    response = login(conn,utente) ? "1" : "-1";
+    char * response = login(conn,utente) ? "1" : "-1";
     PQfinish(conn);
-    
+    return response;
 }
 
-void registerUser(PGconn* conn, char * response, Utente * utente){
+char * registerUser(PGconn* conn, Utente * utente){
     conn = connect_to_DB();
-    response = register_user(conn,utente) ? "1" : "-1";
+    char * response = register_user(conn,utente) ? "1" : "-1";
     PQfinish(conn);
+    return response;
     
 }
 
 char* controlloRichiestaUtente(const char *input, Utente * utente) {
 
-    char* response = "";
+    char * response = "";
     
     Message msg = dividiStringa(input, ":", BUFFER_SIZE);
     
@@ -143,12 +144,12 @@ char* controlloRichiestaUtente(const char *input, Utente * utente) {
 
     if(isSingUp(&msg)){
         
-        registerUser(conn, response, utente);
+        response = registerUser(conn, utente);
 
 
     }else if (isLogin(&msg)){
         
-        loginUser(conn, response, utente);
+        response = loginUser(conn, utente);
         
 
     }else if (isCreate(&msg)){
