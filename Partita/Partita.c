@@ -29,8 +29,7 @@ char* riceviRisposta(int sock,char* buffer, int size){
     return buffer;
 }
 
-
-//void gestioneNuovaConnessione(int socket, char * buffer, Utente * utente, Message * msg);
+void gestioneNuovaConnessione(int * socket, char * buffer, Utente * utente, Message msg);
 
 int main(int argc, char *argv[]){
     
@@ -89,7 +88,7 @@ void * Thread_GestioneNuovaConnessione(void *args){
 
     
     //lavoro
-    gestioneNuovaConnessione(*(arg->socket),arg->buffer,&(arg->utente),&msg);
+    gestioneNuovaConnessione(arg->socket,arg->buffer,&(arg->utente),msg);
 
 
     //utilizzo del henadler prima della chiusura
@@ -100,59 +99,61 @@ void * Thread_GestioneNuovaConnessione(void *args){
  
 void addPlayerToParty(Utente * utente){
 
-    pthread_mutex_lock(&mutex_stato);
-    if(getStato() == INIZIATA){
+    //pthread_mutex_lock(&mutex_stato);
+    printf("prima culo\n");
+    if(getStato(&stanza_corrente, &mutex_stato) == INIZIATA){
         pthread_cond_wait(&cond,&mutex_stato);
     }
+    printf("dopo culo\n");
     
-    setNextInOrder(&stanza, utente);
+    setNextInOrder(&stanza_corrente, utente);
     
-    pthread_mutex_unlock(&mutex_stato);
+    //pthread_mutex_unlock(&mutex_stato);
 
 }
 
 void broadcast(int * sender_socket, char * sender_messagge){
 
-    pthread_mutex_lock(&(stanza_corrente->light));
-    Utente * in_esame = stanza_corrente->listaPartecipanti;
-    for(int i=0;i<stanza_corrente->num_players;i++){
+    pthread_mutex_lock(&(stanza_corrente.light));
+    Utente * in_esame = stanza_corrente.listaPartecipanti;
+    for(int i=0;i<stanza_corrente.num_players;i++){
         in_esame = getNext(in_esame);
         int user_socket = getUserSocket(in_esame);
         if(user_socket != *sender_socket) send(user_socket, sender_messagge, strlen(sender_messagge), 0);
         
     }
-    pthread_mutex_unlock(&(stanza_corrente->light));
+    pthread_mutex_unlock(&(stanza_corrente.light));
 }
 
-Stato getStato(){
-    pthread_mutex_lock(&(stanza_corrente->light));
-    Stato tmp = stanza_corrente.stato;
-    pthread_mutex_unlock(&(stanza_corrente->light));
-    return tmp;
-}
+
 
 void chatParty(int * socket, char * buffer, Utente * utente){
     
-    while(getStato() == SOSPESA){
-        riceviRisposta(*socket, buffer, BUFFER_SIZE);
+    while(getStato(&stanza_corrente, &mutex_stato) == SOSPESA){
+        //riceviRisposta(*socket, buffer, BUFFER_SIZE);
+        printf("prima read\n");
+        read(*socket, buffer, sizeof(buffer));
+        printf("dopo read\n");
         broadcast(socket,buffer);
+        printf("dopo brodcats\n");
     }
     
 }
 
 
-void gestioneNuovaConnessione(int socket, char * buffer, Utente* Utente,Message msg){
+void gestioneNuovaConnessione(int * socket, char * buffer, Utente* utente,Message msg){
 
-    
+    printf("prima del add\n");
     addPlayerToParty(utente);
-    while(getStato() != TERMINATA){
-        if(getStato() == SOSPESA){
-        
-            chatParty();
-            Game();
+    printf("dopo del add\n");
+    while(getStato(&stanza_corrente, &mutex_stato) != FINITA){
+        printf("sto nel  while\n");
+        if(getStato(&stanza_corrente, &mutex_stato) == SOSPESA){
+            printf("sto nel if del while\n");
+            chatParty(socket,buffer,utente);
         }
+        //Game();
     }
-
 } 
 
 

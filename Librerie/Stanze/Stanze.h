@@ -138,6 +138,7 @@ setta il prossimo del utente in base alla direzione
 */
 int setNextInOrder(Stanza* , Utente * );
 
+enum Stato getStato(Stanza*, pthread_mutex_t*);
 
 
 

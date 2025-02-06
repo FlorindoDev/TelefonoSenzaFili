@@ -24,6 +24,7 @@ int signUp();
 int mostraStanzaGioco();
 int creaStanzaGioco();
 int entraStanzaGioco();
+int chatParty();
 
 //Funzione creazione del messaggio ben formattato
 void creaComando(char*  , char* );
@@ -33,6 +34,8 @@ int creaSocket(int);
 int chiudiSocket();
 char* riceviRisposta();
 void mandaMessaggio(char*);
+void mandaMessaggioChat(char*);
+char* riceviRispostaChat();
 
 //Variabiili globali per la gestione della socket per la socket
 int sock = 0;
@@ -42,6 +45,7 @@ char buffer[BUFFER_SIZE] = {0};
 
 Utente utente;
 Stanza stanza;
+int socket_partita;
 
 
 int main() {
@@ -188,6 +192,7 @@ void homeShow(){
                         printf("ERRORE : stanza non esistente o inaccessibile (controlla il codice)");
                     }else{
                         printf("SUCCESSO : entrato in stanza");
+                        risultato = chatParty();
                     }
 
                 }
@@ -275,22 +280,23 @@ int entraStanzaGioco(){
     char message[BUFFER_SIZE];
     creaComando(message,"join");
 
-    int successo = creaSocket(stanza.port);
+    int socket_partita = creaSocket(stanza.port);
 
-    if(successo != -1){
+    if(socket_partita != -1){
         
         // Invia il messaggio al server
         mandaMessaggio(message);
        
         // Riceve la risposta dal server
-        riceviRisposta();
+        //riceviRisposta();
+        
         
 
         return strcmp("-1",buffer) ? 1 : -1; //ok dal server
     }
     
 
-    chiudiSocket();
+    //chiudiSocket();
 
     return -1;
 }
@@ -425,6 +431,16 @@ char* riceviRisposta(){
     return buffer;
 }
 
+char* riceviRispostaChat(){
+
+    int charPassati = read(socket_partita, buffer, BUFFER_SIZE);
+        if (charPassati < BUFFER_SIZE){
+            buffer[charPassati]='\0';
+        }
+    printf("Risposta dal server: %s\n", buffer);
+    return buffer;
+}
+
 void mandaMessaggio(char * message){
 
     // Invia il messaggio al server
@@ -434,3 +450,44 @@ void mandaMessaggio(char * message){
 
 }
 
+void mandaMessaggioChat(char * message){
+
+    // Invia il messaggio al server
+    send(socket_partita, message, strlen(message), 0);
+    printf("Messaggio inviato: %s\n", message);
+    
+
+}
+
+int chatParty(){
+
+    
+    
+    printf("\nSEI IN CHAT COGLIONE:\n");
+    
+
+    char message[BUFFER_SIZE];
+    creaComando(message,"message");
+    
+    while(1){
+        char c;
+        while ((c = getchar()) != '\n' && c != EOF);
+
+        scanf("%[^\n]",message);
+    
+        // Invia il messaggio al server
+        mandaMessaggioChat(message);
+    
+        // Riceve la risposta dal server
+        riceviRispostaChat();
+    }
+    
+    return strcmp("-1",buffer) ? 1 : -1; //ok dal server
+    
+    
+
+    //chiudiSocket();
+
+    return -1;
+
+}

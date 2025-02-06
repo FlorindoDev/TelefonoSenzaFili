@@ -142,6 +142,7 @@ void initStanza(Stanza * stanza, Utente* utente, char * nomeStanza, enum Direzio
     strcpy(stanza->proprietario.password,utente->password);
     strcpy(stanza->proprietario.lingua,utente->lingua);
     strcpy(stanza->nomeStanza,nomeStanza);
+    
     stanza->listaPartecipanti = &(stanza->proprietario);
     stanza->direzione = dir;
 
@@ -205,28 +206,31 @@ Utente * getNextInOrder(Stanza* stanza, Utente * utente){
 
 int existUtente(Stanza* stanza, char * nomeUtente){
 
-    pthread_mutex_lock(&(stanza->light));
+
     if(stanza->next == NULL){
-        pthread_mutex_unlock(&(stanza->light));
+        
         return 0;
     }
-    Utente *tmp = stanza->next->listaPartecipanti;
+    printf("prima di while exsits\n");
+    Utente *tmp = stanza->listaPartecipanti;
     while(tmp != NULL){
+        printf("dopo di while exsits\n");
+        printf("qui: %s-%s\n",tmp->nome,nomeUtente); //si blocca su tmp quando accediamo a nome
         if(strcmp(tmp->nome,nomeUtente) == 0){
-            pthread_mutex_unlock(&(stanza->light));
+            printf("porcodio\n");
             return 1;
         }
         tmp = tmp->next;
     }
 
-    pthread_mutex_unlock(&(stanza->light));
+    printf("porcodio2\n");
     return 0;
 }
 
 
 int insertAtFront(Stanza* stanza, Utente * utente){
     int res = -1;
-    pthread_mutex_lock(&(stanza->light));
+    
     if(stanza->listaPartecipanti == NULL){
         stanza->proprietario = *utente;
         stanza->listaPartecipanti=utente;
@@ -244,14 +248,14 @@ int insertAtFront(Stanza* stanza, Utente * utente){
 
     }
     
-    pthread_mutex_unlock(&(stanza->light));
+   
     return res;
 }
 
 
 int insertAtBack(Stanza* stanza, Utente * utente){
     int res = -1;
-    pthread_mutex_lock(&(stanza->light));
+    
     if(stanza->listaPartecipanti == NULL){
         stanza->proprietario = *utente;
         stanza->listaPartecipanti=utente;
@@ -259,10 +263,13 @@ int insertAtBack(Stanza* stanza, Utente * utente){
         utente->prev = NULL;
         res = 1;
     }else{
+        printf("prima di existis\n");
         if(existUtente(stanza,utente->nome) == 0){
+            printf("dopo di existis\n");
             Utente * prev = stanza->listaPartecipanti;
             Utente * tmp = stanza->listaPartecipanti->next;
             while(tmp != NULL){
+                printf("non finiro negro\n");
                 prev = tmp;
                 tmp = tmp->next;
             }
@@ -270,30 +277,45 @@ int insertAtBack(Stanza* stanza, Utente * utente){
             utente->prev = prev;
             prev->next = utente;
             utente->next = NULL;
-            res = -1;
+            res = 1;
         }    
     }
     
-    pthread_mutex_unlock(&(stanza->light));
+    printf("fine\n");
     return res;
 }
 
 
 
 int setNextInOrder(Stanza* stanza, Utente * utente){
+
+    pthread_mutex_lock(&(stanza->light));
     int res = -1;
 
     if(stanza->direzione == ASC){
+        printf("prima del insertback\n");
         res = insertAtBack(stanza,utente);
+        printf("dopo del insertback\n");
     }else{
+        printf("prima del insertfront\n");
         res = insertAtFront(stanza,utente);
+        printf("dopo del insertfront\n");
     }
 
     if(res == 1){
-        pthread_mutex_lock(&(stanza->light));
+        
         stanza->num_players++;
-        pthread_mutex_unlock(&(stanza->light));
+        
     }
-    
+    printf("fine inserimento\n");
+    pthread_mutex_unlock(&(stanza->light));
     return res;
+}
+
+
+enum Stato getStato(Stanza* stanza_corrente, pthread_mutex_t* mutex_stato){
+    pthread_mutex_lock(mutex_stato);
+    enum Stato tmp = stanza_corrente->stato;
+    pthread_mutex_unlock(mutex_stato);
+    return tmp; 
 }
