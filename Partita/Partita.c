@@ -8,6 +8,8 @@
 #include "../Librerie/ThreadConnessione/ThreadConnessione.h"
 #include "../Librerie/MessageEditor/MessageEditor.h"
 
+pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+pthread_mutex_t mutex_stato = PTHREAD_MUTEX_INITIALIZER;
 
 int server_fd;
 struct sockaddr_in server_addr;
@@ -87,7 +89,7 @@ void * Thread_GestioneNuovaConnessione(void *args){
 
     
     //lavoro
-    //gestioneNuovaConnessione(*(arg->socket),arg->buffer,&(arg->utente),&msg);
+    gestioneNuovaConnessione(*(arg->socket),arg->buffer,&(arg->utente),&msg);
 
 
     //utilizzo del henadler prima della chiusura
@@ -95,10 +97,17 @@ void * Thread_GestioneNuovaConnessione(void *args){
     pthread_exit(NULL);
 }
 
-/* 
+ 
 void addPlayerToParty(Utente * utente){
 
-
+    pthread_mutex_lock(&mutex_stato);
+    if(getStato() == INIZIATA){
+        pthread_cond_wait(&cond,&mutex_stato);
+    }
+    
+    setNextInOrder(&stanza, utente);
+    
+    pthread_mutex_unlock(&mutex_stato);
 
 }
 
@@ -129,28 +138,22 @@ void chatParty(int * socket, char * buffer, Utente * utente){
         broadcast(socket,buffer);
     }
     
-
 }
 
-void addPlayerToParty(Utente utente){
-   
-}
 
-void gestioneNuovaConnessione(int socket, char * buffer, Message msg){
+void gestioneNuovaConnessione(int socket, char * buffer, Utente* Utente,Message msg){
 
     
     addPlayerToParty(utente);
-
-    if(getStato() == SOSPESA){
+    while(getStato() != TERMINATA){
+        if(getStato() == SOSPESA){
         
-        
-        chatParty();
-        Game();
-
+            chatParty();
+            Game();
+        }
     }
-    
 
-} */
+} 
 
 
 int AperturaSocket(){   

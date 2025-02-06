@@ -120,23 +120,23 @@ pid_t creazioneProcessoStanza(int* fd);
 
 int returnPortaPartita(int* fd);
 
-int existUtente(ListStanze* , char * );
+int existUtente(Stanza* , char * );
 
 /*
 da il prossimo del utente in base alla direzione
-- `ListStanze*`: puntatore alla lista 
+- `Stanza*`: puntatore alla lista 
 - `Utente*`: utente da voler vedere il prossimo
 `return` il prossimo
 */
-Utente * getNextInOrder(ListStanze* , Utente * );
+Utente * getNextInOrder(Stanza* , Utente * );
 
 /*
 setta il prossimo del utente in base alla direzione
-- `ListStanze*`: puntatore alla lista 
+- `Stanza*`: puntatore alla lista 
 - `Utente*`: utente da voler inserire 
 `return` successo
 */
-int setNextInOrder(ListStanze* , Utente * );
+int setNextInOrder(Stanza* , Utente * );
 
 
 
