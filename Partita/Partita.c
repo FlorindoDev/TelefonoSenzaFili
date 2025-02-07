@@ -38,7 +38,6 @@ int main(int argc, char *argv[]){
     int pipe_read = atoi(argv[1]);
     int pipe_write = atoi(argv[2]);
     read(pipe_read, &stanza_corrente, sizeof(Stanza));
-    
     AperturaSocket();
     printf("porta stanza: %d\n", ntohs(server_addr.sin_port));
 
@@ -105,7 +104,6 @@ void addPlayerToParty(Utente * utente){
         pthread_cond_wait(&cond,&mutex_stato);
     }
     printf("dopo culo\n");
-    
     setNextInOrder(&stanza_corrente, utente);
     
     //pthread_mutex_unlock(&mutex_stato);
@@ -145,6 +143,7 @@ void gestioneNuovaConnessione(int * socket, char * buffer, Utente* utente,Messag
 
     printf("prima del add\n");
     addPlayerToParty(utente);
+    printUtente(stanza_corrente.listaPartecipanti);
     printf("dopo del add\n");
     while(getStato(&stanza_corrente, &mutex_stato) != FINITA){
         printf("sto nel  while\n");

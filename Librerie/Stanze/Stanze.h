@@ -109,12 +109,6 @@ inizializza stanza
 */
 void initStanza(Stanza * stanza, Utente* utente, char * nomeStanza, enum Direzione dir, int * fd);
 
-/*
-da il next di Utente
-- `Utente*`: utente da voler vedere il next 
-`return` il next
-*/
-Utente * getNext(Utente * Utente);
 
 pid_t creazioneProcessoStanza(int* fd);
 

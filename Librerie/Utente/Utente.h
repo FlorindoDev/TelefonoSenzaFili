@@ -17,6 +17,15 @@ void initUtente(Utente * utente, char nome[MAX_UTENTE], char password[MAX_UTENTE
 
 int getUserSocket(Utente * utente);
 
+void printUtente(Utente * utente);
+
+/*
+da il next di Utente
+- `Utente*`: utente da voler vedere il next 
+`return` il next
+*/
+Utente * getNext(Utente * Utente);
+
 #include "Utente.c"
 
 #endif

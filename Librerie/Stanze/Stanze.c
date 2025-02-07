@@ -138,12 +138,12 @@ void printStanze(ListStanze* liststanze){
 
 void initStanza(Stanza * stanza, Utente* utente, char * nomeStanza, enum Direzione dir,int* fd){
     
-    strcpy(stanza->proprietario.nome,utente->nome);
-    strcpy(stanza->proprietario.password,utente->password);
-    strcpy(stanza->proprietario.lingua,utente->lingua);
-    strcpy(stanza->nomeStanza,nomeStanza);
     
-    stanza->listaPartecipanti = &(stanza->proprietario);
+    strcpy(stanza->nomeStanza,nomeStanza);
+
+    initUtente(&(stanza->proprietario), utente->nome,utente->password,utente->lingua, utente->funzione);
+    
+    stanza->listaPartecipanti = NULL;
     stanza->direzione = dir;
 
 
@@ -155,10 +155,6 @@ void initStanza(Stanza * stanza, Utente* utente, char * nomeStanza, enum Direzio
 
 }
 
-
-Utente * getNext(Utente * utente){
-    if(utente != NULL)return utente->next;
-}
 
 pid_t creazioneProcessoStanza(int* fd){
     pid_t pid = fork();
@@ -213,6 +209,7 @@ int existUtente(Stanza* stanza, char * nomeUtente){
     }
     printf("prima di while exsits\n");
     Utente *tmp = stanza->listaPartecipanti;
+    printUtente(stanza->listaPartecipanti);
     while(tmp != NULL){
         printf("dopo di while exsits\n");
         printf("qui: %s-%s\n",tmp->nome,nomeUtente); //si blocca su tmp quando accediamo a nome
