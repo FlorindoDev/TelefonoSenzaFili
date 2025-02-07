@@ -145,7 +145,8 @@ void initStanza(Stanza * stanza, Utente* utente, char * nomeStanza, enum Direzio
     
     stanza->listaPartecipanti = NULL;
     stanza->direzione = dir;
-
+    stanza->stato=SOSPESA;
+    stanza->next=NULL;
 
     stanza->pid_proccesso_stanza = creazioneProcessoStanza(fd);
     write(fd[1],stanza,sizeof(Stanza));
