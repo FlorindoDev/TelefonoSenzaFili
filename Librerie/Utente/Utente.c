@@ -1,12 +1,13 @@
 #include <string.h>
 
 
-void initUtente(Utente * utente,char nome[MAX_UTENTE], char password[MAX_UTENTE] ,char lingua[MAX_UTENTE], char funzione[MAX_UTENTE]){
+void initUtente(Utente * utente,char nome[MAX_UTENTE], char password[MAX_UTENTE] ,char lingua[MAX_UTENTE], char funzione[MAX_UTENTE], int socket){
 
     strcpy(utente->nome,nome);
     strcpy(utente->password,password);
     strcpy(utente->lingua,lingua);
     strcpy(utente->funzione,funzione);
+    utente->socket=socket;
     utente->next=NULL;
     utente->prev=NULL;
 }

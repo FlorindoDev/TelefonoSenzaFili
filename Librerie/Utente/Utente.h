@@ -13,7 +13,7 @@ typedef struct Utente{
     struct Utente * prev;
 }Utente;
 
-void initUtente(Utente * utente, char nome[MAX_UTENTE], char password[MAX_UTENTE] ,char lingua[MAX_UTENTE], char funzione[MAX_UTENTE]);
+void initUtente(Utente * utente, char nome[MAX_UTENTE], char password[MAX_UTENTE] ,char lingua[MAX_UTENTE], char funzione[MAX_UTENTE], int socket);
 
 int getUserSocket(Utente * utente);
 

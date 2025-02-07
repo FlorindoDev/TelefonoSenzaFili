@@ -140,7 +140,7 @@ char* controlloRichiestaUtente(const char *input, Utente * utente) {
     
     PGconn* conn = NULL;
 
-    initUtente(utente,msg.nome,msg.password,msg.lingua,msg.funzione);
+    initUtente(utente,msg.nome,msg.password,msg.lingua,msg.funzione,0);
 
     if(isSingUp(&msg)){
         
@@ -157,7 +157,7 @@ char* controlloRichiestaUtente(const char *input, Utente * utente) {
         Stanza * tmp = (Stanza *) malloc(sizeof(Stanza));
         Utente * proprietario = (Utente *) malloc(sizeof(Utente));
 
-        initUtente(proprietario,msg.nome,msg.password,msg.lingua,msg.funzione);
+        initUtente(proprietario,msg.nome,msg.password,msg.lingua,msg.funzione,0);
         
         
         //array che contiene i file descriptor delle pipe

@@ -280,7 +280,8 @@ int entraStanzaGioco(){
     char message[BUFFER_SIZE];
     creaComando(message,"join");
 
-    int socket_partita = creaSocket(stanza.port);
+    socket_partita = creaSocket(stanza.port);
+    printf("socket1: %d\n", socket_partita);
 
     if(socket_partita != -1){
         
@@ -388,7 +389,7 @@ int creaSocket(int port){
         printf("SUCCESSO : Connessione creata\n");
     }
 
-    return 0;
+    return sock;
 }
 
 int chiudiSocket(){
@@ -470,13 +471,17 @@ int chatParty(){
     creaComando(message,"message");
     
     while(1){
+
+    
         char c;
         while ((c = getchar()) != '\n' && c != EOF);
 
+        printf("socket2: %d\n", socket_partita);
+        
         scanf("%[^\n]",message);
-    
         // Invia il messaggio al server
         mandaMessaggioChat(message);
+
     
         // Riceve la risposta dal server
         riceviRispostaChat();

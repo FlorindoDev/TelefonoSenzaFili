@@ -141,7 +141,7 @@ void initStanza(Stanza * stanza, Utente* utente, char * nomeStanza, enum Direzio
     
     strcpy(stanza->nomeStanza,nomeStanza);
 
-    initUtente(&(stanza->proprietario), utente->nome,utente->password,utente->lingua, utente->funzione);
+    initUtente(&(stanza->proprietario), utente->nome,utente->password,utente->lingua, utente->funzione, 0);
     
     stanza->listaPartecipanti = NULL;
     stanza->direzione = dir;
