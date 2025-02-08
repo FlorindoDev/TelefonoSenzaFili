@@ -10,6 +10,7 @@
 
 #include "../Librerie/Stanze/Stanze.h"
 #include "../Librerie/Utente/Utente.h"
+#include "../Librerie/GestioneConnessione/GestioneConnessione.h"
 
 #define PORT 8080
 #define BUFFER_SIZE 1024
@@ -29,23 +30,17 @@ int chatParty();
 //Funzione creazione del messaggio ben formattato
 void creaComando(char*  , char* );
 
-//Funzioni per gestione socket
-int creaSocket(int);
-int chiudiSocket();
-char* riceviRisposta();
-void mandaMessaggio(char*);
-void mandaMessaggioChat(char*);
-char* riceviRispostaChat();
 
 //Variabiili globali per la gestione della socket per la socket
-int sock = 0;
+int sock = -1;
+int socket_partita = -1;
 struct sockaddr_in serv_addr;
 char buffer[BUFFER_SIZE] = {0};
 
 
 Utente utente;
 Stanza stanza;
-int socket_partita;
+
 
 
 int main() {
@@ -109,23 +104,23 @@ int login(){
     char message[BUFFER_SIZE];
     creaComando(message,"login");
 
-    int successo = creaSocket(PORT);
+    sock = creaSocket(&serv_addr,PORT);
 
-    if(successo != -1){
+    if(sock != -1){
         
         // Invia il messaggio al server
-        mandaMessaggio(message);
+        mandaMessaggio(sock, message);
        
         // Riceve la risposta dal server
-        riceviRisposta();
+        riceviRisposta(sock,buffer,BUFFER_SIZE);
         
-        chiudiSocket();
+        chiudiSocket(sock);
     
         return strcmp("-1",buffer) ? 1 : -1; //ok dal server
     }
     
 
-    chiudiSocket();
+    chiudiSocket(sock);
     return -1;
 
 }
@@ -147,22 +142,22 @@ int signUp(){
     char message[BUFFER_SIZE];
     creaComando(message,"signup");
 
-    int successo = creaSocket(PORT);
+    int successo = creaSocket(&serv_addr,PORT);
     
     if (successo != -1){
 
         // Invia il messaggio al server
-        mandaMessaggio(message);
+        mandaMessaggio(sock, message);
     
-        riceviRisposta();
+        riceviRisposta(sock,buffer, BUFFER_SIZE);
         
         // Riceve la risposta dal server
-        chiudiSocket();
+        chiudiSocket(sock);
 
         return strcmp("-1",buffer) ? 1 : -1; //ok dal server
     }
 
-    chiudiSocket();
+    chiudiSocket(sock);
     return 0;
     
 
@@ -231,25 +226,25 @@ int mostraStanzaGioco(){
     char message[BUFFER_SIZE];
     creaComando(message,"show");
 
-    int successo = creaSocket(PORT);
+    sock = creaSocket(&serv_addr,PORT);
 
-    if(successo != -1){
+    if(sock != -1){
         
         // Invia il messaggio al server
-        mandaMessaggio(message);
+        mandaMessaggio(sock,message);
        
         // Riceve la risposta dal server
-        riceviRisposta();
+        riceviRisposta(sock,buffer, BUFFER_SIZE);
         
-        chiudiSocket();
+        chiudiSocket(sock);
 
 
     }else{
-        chiudiSocket();
+        chiudiSocket(sock);
         return -1;
     }
     
-    chiudiSocket();
+    chiudiSocket(sock);
 
     //Inizzializzazione token , se e' -1 esco
     char *token = strtok(buffer, ":");
@@ -280,24 +275,18 @@ int entraStanzaGioco(){
     char message[BUFFER_SIZE];
     creaComando(message,"join");
 
-    socket_partita = creaSocket(stanza.port);
+    socket_partita = creaSocket(&serv_addr,stanza.port);
     printf("socket1: %d\n", socket_partita);
 
     if(socket_partita != -1){
         
         // Invia il messaggio al server
-        mandaMessaggio(message);
-       
-        // Riceve la risposta dal server
-        //riceviRisposta();
-        
-        
+        mandaMessaggio(sock,message);
+     
 
         return strcmp("-1",buffer) ? 1 : -1; //ok dal server
     }
     
-
-    //chiudiSocket();
 
     return -1;
 }
@@ -340,60 +329,25 @@ int creaStanzaGioco(){
     char message[BUFFER_SIZE];
     creaComando(message,"create");
 
-    int successo = creaSocket(PORT);
+    sock = creaSocket(&serv_addr,PORT);
 
-    if(successo != -1){
+    if(sock != -1){
         
         // Invia il messaggio al server
-        mandaMessaggio(message);
+        mandaMessaggio(sock, message);
        
         // Riceve la risposta dal server
-        riceviRisposta();
+        riceviRisposta(sock,buffer, BUFFER_SIZE );
         
-        chiudiSocket();
+       chiudiSocket(sock);
     
         return strcmp("-1",buffer) ? 1 : -1;
 
     }
     
 
-    chiudiSocket();
+    chiudiSocket(sock);
     return -1;
-}
-
-
-
-
-int creaSocket(int port){
-    
-    // Creazione della socket
-    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        perror("ERRORE : Errore nella creazione della socket");
-        return -1;
-    }else{
-        printf("SUCCESSO : Socket creata\n");
-    }
-    
-    // Configurazione dell'indirizzo del server
-    memset(&serv_addr, 0, sizeof(serv_addr));
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(port);
-    serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-    
-    // Connessione al server
-    if ((connect(sock, (struct sockaddr*)&serv_addr,sizeof(serv_addr))) < 0) {
-        perror("ERRORE : Errore nella connessione");
-        close(sock);
-        return -1;
-    }else{
-        printf("SUCCESSO : Connessione creata\n");
-    }
-
-    return sock;
-}
-
-int chiudiSocket(){
-    close(sock);
 }
 
 void creaComando(char* message , char* funzione){
@@ -422,44 +376,6 @@ void creaComando(char* message , char* funzione){
     
 }
 
-char* riceviRisposta(){
-
-    int charPassati = read(sock, buffer, BUFFER_SIZE);
-        if (charPassati < BUFFER_SIZE){
-            buffer[charPassati]='\0';
-        }
-    printf("Risposta dal server: %s\n", buffer);
-    return buffer;
-}
-
-char* riceviRispostaChat(){
-
-    int charPassati = read(socket_partita, buffer, BUFFER_SIZE);
-        if (charPassati < BUFFER_SIZE){
-            buffer[charPassati]='\0';
-        }
-    printf("Risposta dal server: %s\n", buffer);
-    return buffer;
-}
-
-void mandaMessaggio(char * message){
-
-    // Invia il messaggio al server
-    send(sock, message, strlen(message), 0);
-    printf("Messaggio inviato: %s\n", message);
-    
-
-}
-
-void mandaMessaggioChat(char * message){
-
-    // Invia il messaggio al server
-    send(socket_partita, message, strlen(message), 0);
-    printf("Messaggio inviato: %s\n", message);
-    
-
-}
-
 int chatParty(){
 
     
@@ -468,6 +384,7 @@ int chatParty(){
     
 
     char message[BUFFER_SIZE];
+    char bufferPartita[BUFFER_SIZE];
     creaComando(message,"message");
     
     while(1){
@@ -478,13 +395,14 @@ int chatParty(){
 
         printf("socket2: %d\n", socket_partita);
         
+        strcpy(message,"");
         scanf("%[^\n]",message);
         // Invia il messaggio al server
-        mandaMessaggioChat(message);
+        mandaMessaggio(socket_partita, message);
 
     
         // Riceve la risposta dal server
-        riceviRispostaChat();
+        riceviRisposta(socket_partita,bufferPartita, BUFFER_SIZE);
     }
     
     return strcmp("-1",buffer) ? 1 : -1; //ok dal server

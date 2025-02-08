@@ -7,6 +7,7 @@
 #include "../Librerie/Stanze/Stanze.h"
 #include "../Librerie/ThreadConnessione/ThreadConnessione.h"
 #include "../Librerie/MessageEditor/MessageEditor.h"
+#include "../Librerie/GestioneConnessione/GestioneConnessione.h"
 
 pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t mutex_stato = PTHREAD_MUTEX_INITIALIZER;
@@ -18,16 +19,6 @@ Stanza stanza_corrente;
 
 int AperturaSocket();
 
-
-char* riceviRisposta(int sock,char* buffer, int size){
-
-    int charPassati = read(sock, buffer, size);
-        if (charPassati < size){
-            buffer[charPassati]='\0';
-        }
-    printf("Risposta dal server: %s\n", buffer);
-    return buffer;
-}
 
 void gestioneNuovaConnessione(int * socket, char * buffer, Utente * utente, Message msg);
 
@@ -130,10 +121,9 @@ void broadcast(int * sender_socket, char * sender_messagge){
 void chatParty(int * socket, char * buffer, Utente * utente){
     
     while(getStato(&stanza_corrente, &mutex_stato) == SOSPESA){
-        //riceviRisposta(*socket, buffer, BUFFER_SIZE);
         printf("prima read\n");
         printf("%d\n",*(socket));
-        riceviRisposta(*socket, buffer, sizeof(buffer));
+        riceviRisposta(*socket, buffer, BUFFER_SIZE);
         printf("dopo read\n");
         broadcast(socket,buffer);
         printf("dopo brodcats\n");
