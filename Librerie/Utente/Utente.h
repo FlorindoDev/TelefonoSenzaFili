@@ -3,12 +3,15 @@
 
 #define MAX_UTENTE 50
 
+#include <pthread.h>
+
 typedef struct Utente{
     char nome[MAX_UTENTE];
     char password[MAX_UTENTE];
     char lingua[MAX_UTENTE];
     char funzione[MAX_UTENTE];
     int socket;
+    pthread_t thread;
     struct Utente * next;
     struct Utente * prev;
 }Utente;
@@ -24,7 +27,11 @@ da il next di Utente
 - `Utente*`: utente da voler vedere il next 
 `return` il next
 */
-Utente * getNext(Utente * Utente);
+Utente * getNext(Utente *);
+
+void setPthread(Utente *, pthread_t);
+
+int removeUtenteFromThread(Utente*,pthread_t, int);
 
 #include "Utente.c"
 

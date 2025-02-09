@@ -26,3 +26,38 @@ void printUtente(Utente * utente){
 Utente * getNext(Utente * utente){
     if(utente != NULL)return utente->next;
 }
+
+
+void setPthread(Utente * utente , pthread_t tid){
+    utente->thread=tid;
+}
+
+int removeUtenteFromThread(Utente * utente, pthread_t thread, int num_players ){
+
+    Utente * in_esame = utente;
+    for(int i=0;i<num_players;i++){
+        if(in_esame->thread==thread){
+            if(in_esame->next != NULL){
+                in_esame->next->prev=in_esame->prev;
+            }else{
+                if(in_esame->prev != NULL){
+                    in_esame->prev->next=NULL;
+                }
+            }
+            if(in_esame->prev != NULL){
+                in_esame->prev->next=in_esame->next;
+            }else{
+                if(in_esame->next != NULL){
+                    in_esame->next->prev=NULL;
+                }
+            }
+            free(in_esame);
+            num_players--;
+        }
+        in_esame = getNext(in_esame);
+    }
+    
+    return (num_players==0) ? -1 : 1;
+    
+}
+

@@ -134,7 +134,9 @@ int setNextInOrder(Stanza* , Utente * );
 
 enum Stato getStato(Stanza*, pthread_mutex_t*);
 
-void setIniziata(Stanza* stanza_corrente, pthread_mutex_t* mutex_stato)
+void setIniziata(Stanza* stanza_corrente, pthread_mutex_t* mutex_stato);
+
+void setSospesa(Stanza* stanza_corrente, pthread_mutex_t* mutex_stato);
 
 
 

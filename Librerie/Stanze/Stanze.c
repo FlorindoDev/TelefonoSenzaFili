@@ -324,3 +324,10 @@ void setIniziata(Stanza* stanza_corrente, pthread_mutex_t* mutex_stato){
     stanza_corrente->stato=INIZIATA;
     pthread_mutex_unlock(mutex_stato);
 }
+
+
+void setSospesa(Stanza* stanza_corrente, pthread_mutex_t* mutex_stato){
+    pthread_mutex_lock(mutex_stato);
+    stanza_corrente->stato=SOSPESA;
+    pthread_mutex_unlock(mutex_stato);
+}

@@ -47,6 +47,8 @@ GestioneConnessioneArgs * initArg(int * new_socket);
 */
 void assignConnectionToThread(int server_fd, struct sockaddr_in address, socklen_t addrlen);
 
+GestioneConnessioneArgs * initArgUtente(int *, Utente );
+
 
 #include "ThreadConnessione.c"
 

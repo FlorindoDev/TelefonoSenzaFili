@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <signal.h>
 
 
 #include "../Librerie/Stanze/Stanze.h"
@@ -27,6 +28,8 @@ int creaStanzaGioco();
 int entraStanzaGioco();
 void * Thread_ChatParty(void *args);
 int chatParty();
+//void DisconnectedHandler(int);
+void * Thread_ChatParty(void *args);
 
 //Funzione creazione del messaggio ben formattato
 void creaComando(char*  , char* );
@@ -45,6 +48,14 @@ Stanza stanza;
 
 
 int main() {
+
+    /*struct sigaction sa2;
+    sa2.sa_handler = DisconnectedHandler;
+
+    sigemptyset(&sa2.sa_mask);
+    sigaction(SIGINT, &sa2, NULL);*/
+
+
     int scelta;
     int risultato;
 
@@ -91,12 +102,21 @@ int main() {
     return 0;
 }
 
+/*
+void DisconnectedHandler(int input){
+    char message[BUFFER_SIZE] = "SIGKILL";
+    mandaMessaggio(socket_partita, message);
+    exit(0);
+}*/
+
 void * Thread_ChatParty(void *args){
 
     char bufferPartita[BUFFER_SIZE];
     while(1){
         riceviRisposta(socket_partita,bufferPartita, BUFFER_SIZE);
     }
+
+    
 
 }
 
@@ -281,6 +301,13 @@ int entraStanzaGioco(){
     
     scanf("%hu", &(stanza.port));
     
+    pthread_t thread;
+    if (pthread_create(&thread, NULL, Thread_ChatParty,NULL) != 0) {
+        perror("Errore nella creazione del thread");
+        return -1;
+    }
+    pthread_detach(thread);
+    
 
     char message[BUFFER_SIZE];
     creaComando(message,"join");
@@ -396,13 +423,6 @@ int chatParty(){
     char message[BUFFER_SIZE];
     char bufferChatRicezione[BUFFER_SIZE];
     creaComando(message,"chat");
-
-    pthread_t thread;
-    if (pthread_create(&thread, NULL, Thread_ChatParty,NULL) != 0) {
-        perror("Errore nella creazione del thread");
-        return -1;
-    }
-    pthread_detach(thread);
 
     while(1){
 

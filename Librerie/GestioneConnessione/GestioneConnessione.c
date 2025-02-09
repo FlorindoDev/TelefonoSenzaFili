@@ -35,10 +35,16 @@ int chiudiSocket(int socket){
 char* riceviRisposta(int socket, char * buffer, int grandezza_buffer){
 
     int charPassati = read(socket, buffer, grandezza_buffer);
-        if (charPassati < grandezza_buffer){
-            buffer[charPassati]='\0';
-        }
+    /* printf("char passati %d:\n", charPassati);
+    if(charPassati <= 0){
+        pthread_kill(pthread_self(),SIGUSR2);
+    } */
+
+    if (charPassati < grandezza_buffer){
+        buffer[charPassati]='\0';
+    }
     printf("Risposta dal server: %s\n", buffer);
+    printf("char passati %d:\n", charPassati);
     return buffer;
 }
 

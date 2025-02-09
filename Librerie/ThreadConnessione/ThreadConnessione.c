@@ -5,6 +5,13 @@ GestioneConnessioneArgs * initArg(int * new_socket){
     return tmp;
 }
 
+GestioneConnessioneArgs * initArgUtente(int * new_socket, Utente utente){
+    GestioneConnessioneArgs * tmp = (GestioneConnessioneArgs *)malloc(sizeof(GestioneConnessioneArgs));
+    tmp->socket=new_socket;
+    tmp->utente=utente;
+    return tmp;
+}
+
 
 void cleanup_handler_connection(void *args){
     GestioneConnessioneArgs * arg=(GestioneConnessioneArgs *) args;
