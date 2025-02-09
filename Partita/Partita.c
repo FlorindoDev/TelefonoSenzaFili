@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <signal.h>
 
 #include "../Librerie/Stanze/Stanze.h"
 #include "../Librerie/ThreadConnessione/ThreadConnessione.h"
@@ -11,24 +12,30 @@
 
 #define MAX_PAROLA 5000
 
-pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+pthread_cond_t cond_stato = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t mutex_stato = PTHREAD_MUTEX_INITIALIZER;
+
+pthread_cond_t cond_chat = PTHREAD_COND_INITIALIZER;
+pthread_mutex_t mutex_chat = PTHREAD_MUTEX_INITIALIZER;
 
 int server_fd;
 struct sockaddr_in server_addr;
 socklen_t addr_len = sizeof(server_addr);
 Stanza stanza_corrente;
+int flag = 0;
 
 int AperturaSocket();
 void timerHomeMade(int , int); //tempo , quante volte 
+void * Thread_Game(void *args);
+void Game();
+void ThreadKill();
+void CloseThread(int input);
 
 
 void gestioneNuovaConnessione(int * socket, char * buffer, Utente * utente, Message msg);
 
 int main(int argc, char *argv[]){
-    
 
-    
     int pipe_read = atoi(argv[1]);
     int pipe_write = atoi(argv[2]);
     read(pipe_read, &stanza_corrente, sizeof(Stanza));
@@ -36,6 +43,14 @@ int main(int argc, char *argv[]){
     printf("porta stanza: %d\n", ntohs(server_addr.sin_port));
 
     write(pipe_write,&(server_addr.sin_port),sizeof(server_addr.sin_port));
+
+
+    pthread_t thread;
+    if (pthread_create(&thread, NULL, Thread_Game,NULL) != 0) {
+        perror("Errore nella creazione del thread");
+        return -1;
+    }
+    pthread_detach(thread);
     
 
     
@@ -53,7 +68,7 @@ int main(int argc, char *argv[]){
     while (1){
     
         assignConnectionToThread(server_fd,server_addr,addr_len);
-
+        
     }
 
     
@@ -64,12 +79,39 @@ int main(int argc, char *argv[]){
 
 }
 
+/* void CloseThread(int input){
+    if(removeUtenteFromThread(stanza_corrente.listaPartecipanti,pthread_self(),stanza_corrente.num_players) == 0){
+        exit(0);
+    }else{
+        stanza_corrente.num_players--;
+    }
+} */
+
+void UnlockChat(int input){
+    printf("UnlockChat\n");
+    //chatParty(NULL,NULL,NULL);
+    flag=1;
+}
 
 //fare che quando uno chiuda la connessione il thread toglie l'utente
 void * Thread_GestioneNuovaConnessione(void *args){
     GestioneConnessioneArgs * arg=(GestioneConnessioneArgs *) args;
+    
+    struct sigaction sa;
+    sa.sa_handler = UnlockChat;
 
-    //aggunta handler per rupulire risorse allocate per il thread
+    sa.sa_flags = 0; // Assicura che read venga interrotta
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGUSR1, &sa, NULL);
+
+    /* struct sigaction sa2;
+    sa2.sa_handler = CloseThread;
+
+    sa2.sa_flags = 0; // Assicura che read venga interrotta
+    sigemptyset(&sa2.sa_mask);
+    sigaction(SIGUSR2, &sa2, NULL); */
+
+
     pthread_cleanup_push(cleanup_handler_connection, args);
 
     printf("%d\n",*(arg->socket));
@@ -78,6 +120,7 @@ void * Thread_GestioneNuovaConnessione(void *args){
     Message msg = dividiStringa(arg->buffer,":",sizeof(arg->buffer));
 
     initUtente(&(arg->utente),msg.nome,msg.password,msg.lingua,msg.funzione,*(arg->socket));
+    setPthread(&(arg->utente),pthread_self());
 
     //lavoro
     gestioneNuovaConnessione(arg->socket,arg->buffer,&(arg->utente),msg);
@@ -94,7 +137,10 @@ void addPlayerToParty(Utente * utente){
     //pthread_mutex_lock(&mutex_stato);
     printf("prima culo\n");
     if(getStato(&stanza_corrente, &mutex_stato) == INIZIATA){
-        pthread_cond_wait(&cond,&mutex_stato);
+        pthread_mutex_lock(&mutex_stato);
+        pthread_cond_wait(&cond_stato,&mutex_stato);
+        pthread_mutex_unlock(&mutex_stato);
+        printf("ho finito di aspettare\n");
     }
     printf("dopo culo\n");
     setNextInOrder(&stanza_corrente, utente);
@@ -128,6 +174,7 @@ void broadcast(int * sender_socket, char * sender_messagge){
 
 void chatParty(int * socket, char * buffer, Utente * utente){
     
+    if(socket==NULL)return;
     //aggiusta
     char buffer2[BUFFER_SIZE]="";
     strcat(buffer2,utente->nome);
@@ -140,6 +187,10 @@ void chatParty(int * socket, char * buffer, Utente * utente){
         printf("prima read\n");
         printf("%d\n",*(socket));
         riceviRisposta(*socket, buffer, BUFFER_SIZE);
+        if(flag){
+            flag = 0;
+            return;
+        }
         printf("dopo read\n");
 
         //aggiusta
@@ -163,32 +214,77 @@ void timerHomeMade(int time, int intervallo){
     for(int i=0;i<time;i+=intervallo){
         sprintf(tempo_rimanente, "%d", (time-i));
         strcat(message,tempo_rimanente);
+        strcat(message," secondi");
         broadcast(NULL,message);
+        strcpy(message, "Rimmangono ");
         sleep(intervallo);
     }
 }
 
+void * Thread_Game(void *args){
+
+    char bufferPartita[BUFFER_SIZE];
+    while(getStato(&stanza_corrente, &mutex_stato) != FINITA){
+        printf("prima del gioco\n");
+        Game();
+        printf("dopo del gioco\n");
+    }
+
+}
+
+void ThreadKill(){
+
+    pthread_mutex_lock(&(stanza_corrente.light));
+    Utente * in_esame = stanza_corrente.listaPartecipanti;
+    for(int i=0;i<stanza_corrente.num_players;i++){
+        pthread_kill(in_esame->thread,SIGUSR1);
+        in_esame = getNext(in_esame);
+        if(in_esame == NULL){
+            pthread_mutex_unlock(&(stanza_corrente.light));
+            return;
+        }
+
+    }
+    pthread_mutex_unlock(&(stanza_corrente.light));
+}
+
 void Game(){
 
-    timerHomeMade(15,60);
+    while(stanza_corrente.num_players < 2);
+    timerHomeMade(20,5);
+    ThreadKill();
+    sleep(1);
+
     setIniziata(&stanza_corrente, &mutex_stato);
 
     pthread_mutex_lock(&(stanza_corrente.light));
 
     Utente * in_esame = stanza_corrente.listaPartecipanti;
-    char parola[MAX_PAROLA];
+    char parola[MAX_PAROLA]="";
+    char tmp_parola[MAX_PAROLA]="";
+    int user_socket = getUserSocket(in_esame);
     for(int i=0;i<stanza_corrente.num_players;i++){
-       
-        int user_socket = getUserSocket(in_esame);
-        send(user_socket, "è il tuo turno:\n", strlen("è il tuo turno:\n"), 0);
+        send(user_socket, "\nè il tuo turno:\n", strlen("\nè il tuo turno:\n"), 0);
+        strcpy(tmp_parola,parola);
         riceviRisposta(user_socket,parola,MAX_PAROLA);
+        strcat(tmp_parola,parola);
         in_esame = getNext(in_esame);
-        send(user_socket, parola, strlen(parola), 0);
-        
-        
+        if(in_esame != NULL){
+            //tradure parola arrivata 
+            user_socket = getUserSocket(in_esame);
+            
+            send(user_socket, tmp_parola, strlen(tmp_parola), 0);
+            printf("parola finale %s: \n", tmp_parola);
+        }
     }
-    
     pthread_mutex_unlock(&(stanza_corrente.light));
+    setSospesa(&stanza_corrente, &mutex_stato);
+
+    broadcast(NULL,tmp_parola);
+    pthread_cond_broadcast(&cond_stato);
+    pthread_cond_broadcast(&cond_chat);
+    //sleep(5); //forse è vitale
+    
 }
 
 void gestioneNuovaConnessione(int * socket, char * buffer, Utente* utente,Message msg){
@@ -202,8 +298,12 @@ void gestioneNuovaConnessione(int * socket, char * buffer, Utente* utente,Messag
         if(getStato(&stanza_corrente, &mutex_stato) == SOSPESA){
             printf("sto nel if del while\n");
             chatParty(socket,buffer,utente);
+            printf("fine chat\n");
         }
-        pthread_cond_wait(&cond,&mutex_stato);
+        pthread_mutex_lock(&mutex_chat);
+        pthread_cond_wait(&cond_chat,&mutex_chat);
+        pthread_mutex_unlock(&mutex_chat);
+        printf("mi sono riattivato\n");
     }
 } 
 
