@@ -95,6 +95,7 @@ void addPlayerToParty(Utente * utente){
     }
     printf("dopo culo\n");
     setNextInOrder(&stanza_corrente, utente);
+    printf("dopo set\n");
     
     //pthread_mutex_unlock(&mutex_stato);
 
@@ -120,12 +121,27 @@ void broadcast(int * sender_socket, char * sender_messagge){
 
 void chatParty(int * socket, char * buffer, Utente * utente){
     
+    char buffer2[BUFFER_SIZE]="";
+    strcat(buffer2,utente->nome);
+    strcat(buffer2," joined in the chat");
+    broadcast(socket,buffer2);
+    
     while(getStato(&stanza_corrente, &mutex_stato) == SOSPESA){
+
+
         printf("prima read\n");
         printf("%d\n",*(socket));
         riceviRisposta(*socket, buffer, BUFFER_SIZE);
         printf("dopo read\n");
-        broadcast(socket,buffer);
+
+        //aggiusta
+        strcpy(buffer2,"");
+        strcat(buffer2,"<");
+        strcat(buffer2,utente->nome);
+        strcat(buffer2,">: ");
+        strcat(buffer2,buffer);
+
+        broadcast(socket,buffer2);
         printf("dopo brodcats\n");
     }
     
@@ -152,8 +168,8 @@ void Game(){
 void gestioneNuovaConnessione(int * socket, char * buffer, Utente* utente,Message msg){
 
     printf("prima del add\n");
-    addPlayerToParty(utente);
     printUtente(utente);
+    addPlayerToParty(utente);
     printf("dopo del add\n");
     while(getStato(&stanza_corrente, &mutex_stato) != FINITA){
         printf("sto nel  while\n");

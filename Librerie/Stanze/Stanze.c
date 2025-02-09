@@ -286,10 +286,10 @@ int insertAtBack(Stanza* stanza, Utente * utente){
 
 
 int setNextInOrder(Stanza* stanza, Utente * utente){
-
+    printf("prima del mutex\n");
     pthread_mutex_lock(&(stanza->light));
     int res = -1;
-
+    printf("prima del if della direzione\n");
     if(stanza->direzione == ASC){
         printf("prima del insertback\n");
         res = insertAtBack(stanza,utente);
