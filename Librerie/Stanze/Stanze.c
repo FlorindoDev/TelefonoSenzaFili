@@ -147,6 +147,7 @@ void initStanza(Stanza * stanza, Utente* utente, char * nomeStanza, enum Direzio
     stanza->direzione = dir;
     stanza->stato=SOSPESA;
     stanza->next=NULL;
+    pthread_mutex_init(&(stanza->light), NULL);
 
     stanza->pid_proccesso_stanza = creazioneProcessoStanza(fd);
     write(fd[1],stanza,sizeof(Stanza));
@@ -316,4 +317,10 @@ enum Stato getStato(Stanza* stanza_corrente, pthread_mutex_t* mutex_stato){
     enum Stato tmp = stanza_corrente->stato;
     pthread_mutex_unlock(mutex_stato);
     return tmp; 
+}
+
+void setIniziata(Stanza* stanza_corrente, pthread_mutex_t* mutex_stato){
+    pthread_mutex_lock(mutex_stato);
+    stanza_corrente->stato=INIZIATA;
+    pthread_mutex_unlock(mutex_stato);
 }

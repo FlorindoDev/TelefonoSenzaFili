@@ -134,6 +134,8 @@ int setNextInOrder(Stanza* , Utente * );
 
 enum Stato getStato(Stanza*, pthread_mutex_t*);
 
+void setIniziata(Stanza* stanza_corrente, pthread_mutex_t* mutex_stato)
+
 
 
 #include "Stanze.c"
