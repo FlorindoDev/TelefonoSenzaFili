@@ -135,7 +135,7 @@ int login(){
     char message[BUFFER_SIZE];
     creaComando(message,"login");
 
-    sock = creaSocket(&serv_addrr_g,PORT);
+    sock = creaSocket(&serv_addrr_g,PORT,"127.0.0.1");
 
     if(sock != -1){
         
@@ -175,7 +175,7 @@ int signUp(){
     char message[BUFFER_SIZE];
     creaComando(message,"signup");
 
-    int successo = creaSocket(&serv_addrr_g,PORT);
+    int successo = creaSocket(&serv_addrr_g,PORT,"127.0.0.1");
     
     if (successo != -1){
 
@@ -259,7 +259,7 @@ int mostraStanzaGioco(){
     char message[BUFFER_SIZE];
     creaComando(message,"show");
 
-    sock = creaSocket(&serv_addrr_g,PORT);
+    sock = creaSocket(&serv_addrr_g,PORT,"127.0.0.1");
 
     if(sock != -1){
         
@@ -315,7 +315,7 @@ int entraStanzaGioco(){
     char message[BUFFER_SIZE];
     creaComando(message,"join");
 
-    socket_partita = creaSocket(&serv_addrr_g,stanza.port);
+    socket_partita = creaSocket(&serv_addrr_g,stanza.port,"127.0.0.1");
     printf("socket1: %d\n", socket_partita);
 
     if(socket_partita != -1){
@@ -369,7 +369,7 @@ int creaStanzaGioco(){
     char message[BUFFER_SIZE];
     creaComando(message,"create");
 
-    sock = creaSocket(&serv_addrr_g,PORT);
+    sock = creaSocket(&serv_addrr_g,PORT,"127.0.0.1");
 
     if(sock != -1){
         

@@ -228,7 +228,8 @@ char* Traduzione(char* s, Utente* u1, Utente* u2){
     int socket_partita = -1;
     struct sockaddr_in serv_addrr_g;
 
-    sock = creaSocket(&serv_addrr_g,5000);
+
+    sock = creaSocket(&serv_addrr_g,5000,"nifty_franklin");
     
     snprintf(post_data, sizeof(post_data),"q=%s&source=%s&target=%s",s,u1->lingua,u2->lingua);
     // Creazione della richiesta HTTP POST
@@ -240,7 +241,7 @@ char* Traduzione(char* s, Utente* u1, Utente* u2){
              "Connection: close\r\n"
              "\r\n"
              "%s",
-             "127.0.0.1", 5000, strlen(post_data), post_data);
+             "nifty_franklin", 5000, strlen(post_data), post_data);
 
     // Invio della richiesta al server
     printf("MSG:\n%s\n", request);
