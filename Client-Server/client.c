@@ -13,12 +13,10 @@
 #include "../Librerie/Utente/Utente.h"
 #include "../Librerie/GestioneConnessione/GestioneConnessione.h"
 
-#define NUM_LINGUE 4
 #define PORT 8080
 #define BUFFER_SIZE 1024
 #define EXIT_MESSAGE "c0886be5e66f118ea41bd90727881825"
 
-char lingue[NUM_LINGUE][3] = {"it","fr","en","es"};
 
 //Menu dopo essere loggato
 void homeShow();
@@ -137,7 +135,7 @@ int login(){
     char message[BUFFER_SIZE];
     creaComando(message,"login");
 
-    sock = creaSocket(&serv_addrr_g,PORT,"127.0.0.1");
+    sock = creaSocket(&serv_addrr_g,PORT);
 
     if(sock != -1){
         
@@ -145,14 +143,13 @@ int login(){
         mandaMessaggio(sock, message);
        
         // Riceve la risposta dal server
-        riceviRisposta(sock,buffer,2);
+        riceviRisposta(sock,buffer,BUFFER_SIZE);
         strcpy(utente.lingua,buffer);
-        strcpy(buffer,"");
         riceviRisposta(sock,buffer,BUFFER_SIZE);
 
         chiudiSocket(sock);
     
-        return strcmp("1",buffer)==0 ? 1 : -1; //ok dal server
+        return strcmp("-1",buffer) ? 1 : -1; //ok dal server
     }
     
 
@@ -171,31 +168,14 @@ int signUp(){
     printf("Inserisci la tua password: ");
     scanf("%49s", utente.password); // Limitiamo l'input a 49 caratteri
 
-    unsigned short int flag_giusta_lingua = 1;
-    do{
-        // Chiedere la lingua
-        printf("Inserisci la tua lingua preferita (it/en/es/fr): ");
-        scanf("%19s", utente.lingua); // Limitiamo l'input a 19 caratteri
-        
-        for(int i = 0; i < NUM_LINGUE;i++){
-            if(strcmp(utente.lingua,lingue[i])==0){
-                flag_giusta_lingua=0;
-                break;
-            }
-        }
-
-        if(flag_giusta_lingua == 1){
-            printf("Per favore inserisci una lingua accettata (it/en/es/fr) !\n");
-        }
-        
-
-    }while(flag_giusta_lingua != 0);
-    
+    // Chiedere la lingua
+    printf("Inserisci la tua lingua preferita: ");
+    scanf("%19s", utente.lingua); // Limitiamo l'input a 19 caratteri
 
     char message[BUFFER_SIZE];
     creaComando(message,"signup");
 
-    int successo = creaSocket(&serv_addrr_g,PORT,"127.0.0.1");
+    int successo = creaSocket(&serv_addrr_g,PORT);
     
     if (successo != -1){
 
@@ -207,7 +187,7 @@ int signUp(){
         // Riceve la risposta dal server
         chiudiSocket(sock);
 
-        return strcmp("1",buffer)==0 ? 1 : -1; //ok dal server
+        return strcmp("-1",buffer) ? 1 : -1; //ok dal server
     }
 
     chiudiSocket(sock);
@@ -279,7 +259,7 @@ int mostraStanzaGioco(){
     char message[BUFFER_SIZE];
     creaComando(message,"show");
 
-    sock = creaSocket(&serv_addrr_g,PORT,"127.0.0.1");
+    sock = creaSocket(&serv_addrr_g,PORT);
 
     if(sock != -1){
         
@@ -335,7 +315,7 @@ int entraStanzaGioco(){
     char message[BUFFER_SIZE];
     creaComando(message,"join");
 
-    socket_partita = creaSocket(&serv_addrr_g,stanza.port,"127.0.0.1");
+    socket_partita = creaSocket(&serv_addrr_g,stanza.port);
     printf("socket1: %d\n", socket_partita);
 
     if(socket_partita != -1){
@@ -344,7 +324,7 @@ int entraStanzaGioco(){
         mandaMessaggio(sock,message);
      
 
-        return strcmp("1",buffer)==0 ? 1 : -1; //ok dal server
+        return strcmp("-1",buffer) ? 1 : -1; //ok dal server
     }
     
 
@@ -389,7 +369,7 @@ int creaStanzaGioco(){
     char message[BUFFER_SIZE];
     creaComando(message,"create");
 
-    sock = creaSocket(&serv_addrr_g,PORT,"127.0.0.1");
+    sock = creaSocket(&serv_addrr_g,PORT);
 
     if(sock != -1){
         
@@ -401,7 +381,7 @@ int creaStanzaGioco(){
         
        chiudiSocket(sock);
     
-        return strcmp("1",buffer)==0 ? 1 : -1;
+        return strcmp("-1",buffer) ? 1 : -1;
 
     }
     
@@ -465,7 +445,7 @@ int chatParty(){
         
     }
     
-    return strcmp("1",buffer)==0 ? 1 : -1; //ok dal server
+    return strcmp("-1",buffer) ? 1 : -1; //ok dal server
     
     
 

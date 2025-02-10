@@ -1,47 +1,6 @@
 
 
-int creaSocketByHostName(struct sockaddr_in * server_addr, int port,char * HostName){
-    int socket_r;
-    // Creazione della socket
-    if ((socket_r = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        perror("ERRORE : Errore nella creazione della socket");
-        return -1;
-    }else{
-        printf("SUCCESSO : Socket creata\n");
-    }
-
-    struct hostent *server;
-
-    server = gethostbyname(HostName);
-	if (server == NULL){		 
-		close(socket_r);
-		return 0;
-	}
-
-    //bzero((char *) server_addr, sizeof(server_addr)); //setta tutto a zero
-    
-    // Configurazione dell'indirizzo del server
-    memset(server_addr, 0, sizeof(*server_addr));
-    server_addr->sin_family = AF_INET;
-    server_addr->sin_port = htons(port);
-
-    bcopy((char *)server->h_addr, (char *)server_addr->sin_addr.s_addr, server->h_length); 
-    
-    // Connessione al server
-    if ((connect(socket_r, (struct sockaddr*)server_addr,sizeof(*server_addr))) < 0) {
-        perror("ERRORE : Errore nella connessione");
-        close(socket_r);
-        return -1;
-    }else{
-        printf("SUCCESSO : Connessione creata\n");
-    }
-
-    return socket_r;
-}
-
-
-
-int creaSocket(struct sockaddr_in * server_addr, int port,char * ip){
+int creaSocket(struct sockaddr_in * server_addr, int port){
     int socket_r;
     // Creazione della socket
     if ((socket_r = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
@@ -55,7 +14,7 @@ int creaSocket(struct sockaddr_in * server_addr, int port,char * ip){
     memset(server_addr, 0, sizeof(*server_addr));
     server_addr->sin_family = AF_INET;
     server_addr->sin_port = htons(port);
-    server_addr->sin_addr.s_addr = inet_addr(ip);
+    server_addr->sin_addr.s_addr = inet_addr("127.0.0.1");
     
     // Connessione al server
     if ((connect(socket_r, (struct sockaddr*)server_addr,sizeof(*server_addr))) < 0) {
