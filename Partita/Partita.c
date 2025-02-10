@@ -11,6 +11,7 @@
 #include "../Librerie/GestioneConnessione/GestioneConnessione.h"
 
 #define MAX_PAROLA 5000
+#define MIN_PLAYER 2
 
 pthread_cond_t cond_stato = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t mutex_stato = PTHREAD_MUTEX_INITIALIZER;
@@ -20,6 +21,8 @@ pthread_mutex_t mutex_chat = PTHREAD_MUTEX_INITIALIZER;
 
 pthread_cond_t cond_game = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t mutex_game = PTHREAD_MUTEX_INITIALIZER;
+
+int inCoda=0;
 
 /* pthread_key_t flag_key; */
 pthread_key_t flag_key_game;
@@ -100,6 +103,7 @@ void CloseThread(int input){
         stanza_corrente.num_players--;
         printf("dopo il numero è %d\n", stanza_corrente.num_players);
         pthread_mutex_unlock(&(stanza_corrente.light));
+        if(inCoda==0)pthread_cond_signal(&cond_game);
         printf("sbloccato dopo canc\n");
         pthread_cond_signal(&cond_stato);
         printf("signal dopo canc\n");
@@ -178,12 +182,14 @@ void addPlayerToParty(Utente * utente){
     printf("prima culo\n");
     if(getStato(&stanza_corrente, &mutex_stato) == INIZIATA){
         pthread_mutex_lock(&mutex_stato);
+        inCoda++;
         pthread_cond_wait(&cond_stato,&mutex_stato);
         pthread_mutex_unlock(&mutex_stato);
         printf("ho finito di aspettare\n");
     }
     printf("dopo culo\n");
     setNextInOrder(&stanza_corrente, utente);
+    inCoda--;
     pthread_cond_signal(&cond_game);
     printf("dopo set\n");
     
@@ -228,6 +234,7 @@ void chatParty(int * socket, char * buffer, Utente * utente){
         printf("prima read\n");
         printf("%d\n",*(socket));
         riceviRispostaSignal(*socket, buffer, BUFFER_SIZE/* ,flag_key */);
+        if(getStato(&stanza_corrente, &mutex_stato) == INIZIATA)return;
         printf("dopo read\n");
     
         //aggiusta
@@ -290,12 +297,11 @@ void ThreadKill(){
 
 void Game(){
 
-    while(stanza_corrente.num_players < 2);
+    while(stanza_corrente.num_players < MIN_PLAYER);
     timerHomeMade(20,5);
+    setIniziata(&stanza_corrente, &mutex_stato);
     ThreadKill();
     sleep(1);
-
-    setIniziata(&stanza_corrente, &mutex_stato);
 
     //pthread_mutex_lock(&(stanza_corrente.light));
 
