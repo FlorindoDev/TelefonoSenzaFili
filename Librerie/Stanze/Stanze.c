@@ -183,9 +183,10 @@ int returnPortaPartita(int* fd){
     return ntohs(server_addr_stanza.sin_port);
 }
 
-Utente * getNextInOrder(Stanza* stanza, Utente * utente){
+Utente * getNextInOrder(Utente * utente, enum Direzione dir){
     
-
+    if(utente != NULL)return (dir == ASC) ? utente->next : utente->prev;
+    return NULL; 
 }
 
 int existUtente(Stanza* stanza, char * nomeUtente){

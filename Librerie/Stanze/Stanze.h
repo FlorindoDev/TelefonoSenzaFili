@@ -123,7 +123,7 @@ da il prossimo del utente in base alla direzione
 - `Utente*`: utente da voler vedere il prossimo
 `return` il prossimo
 */
-Utente * getNextInOrder(Stanza* , Utente * );
+Utente * getNextInOrder(Utente *, enum Direzione);
 
 /*
 setta il prossimo del utente in base alla direzione

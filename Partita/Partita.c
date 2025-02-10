@@ -299,7 +299,7 @@ void Game(){
 
     //pthread_mutex_lock(&(stanza_corrente.light));
 
-    Utente * in_esame = stanza_corrente.listaPartecipanti;
+    Utente * in_esame =  (stanza_corrente.direzione == ASC) ? stanza_corrente.listaPartecipanti : stanza_corrente.coda;
     char parola[MAX_PAROLA]="";
     char tmp_parola[MAX_PAROLA]="";
     int user_socket = getUserSocket(in_esame);
@@ -320,7 +320,7 @@ void Game(){
             stampaLista(stanza_corrente.listaPartecipanti);
         }
         strcat(tmp_parola,parola);
-        in_esame = getNext(in_esame);
+        in_esame = getNextInOrder(in_esame,stanza_corrente.direzione);
         if(in_esame != NULL){
             //tradure parola arrivata 
             user_socket = getUserSocket(in_esame);
