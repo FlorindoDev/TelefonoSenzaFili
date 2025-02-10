@@ -151,8 +151,11 @@ char* controlloRichiestaUtente(const char *input, Utente * utente, int * new_soc
     }else if (isLogin(&msg)){
         
         response = loginUser(conn, utente, ling);
-        if(strcmp(response,"1")==0)send(*new_socket, ling, strlen(ling), 0);
-        else{send(*new_socket, "-1", strlen("-1"), 0);}
+        if(strcmp(response,"1")==0){
+            send(*new_socket, ling, strlen(ling), 0);
+        }else{
+            send(*new_socket, "no", strlen("no"), 0);
+        }
         
 
     }else if (isCreate(&msg)){

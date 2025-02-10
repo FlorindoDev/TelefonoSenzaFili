@@ -16,6 +16,7 @@ RUN apt-get update && apt-get install -y \
     sudo \
     net-tools \
     valgrind \
+    curl \  
     && rm -rf /var/lib/apt/lists/*
     # gcc -o my_program main.c -I/usr/include/postgresql -lpq \
     # gcc -o client ProveSocket/client.c
