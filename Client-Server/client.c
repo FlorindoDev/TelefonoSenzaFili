@@ -13,10 +13,12 @@
 #include "../Librerie/Utente/Utente.h"
 #include "../Librerie/GestioneConnessione/GestioneConnessione.h"
 
+#define NUM_LINGUE 4
 #define PORT 8080
 #define BUFFER_SIZE 1024
 #define EXIT_MESSAGE "c0886be5e66f118ea41bd90727881825"
 
+char lingue[NUM_LINGUE][3] = {"it","fr","en","es"};
 
 //Menu dopo essere loggato
 void homeShow();
@@ -143,13 +145,14 @@ int login(){
         mandaMessaggio(sock, message);
        
         // Riceve la risposta dal server
-        riceviRisposta(sock,buffer,BUFFER_SIZE);
+        riceviRisposta(sock,buffer,2);
         strcpy(utente.lingua,buffer);
+        strcpy(buffer,"");
         riceviRisposta(sock,buffer,BUFFER_SIZE);
 
         chiudiSocket(sock);
     
-        return strcmp("-1",buffer) ? 1 : -1; //ok dal server
+        return strcmp("1",buffer)==0 ? 1 : -1; //ok dal server
     }
     
 
@@ -168,9 +171,26 @@ int signUp(){
     printf("Inserisci la tua password: ");
     scanf("%49s", utente.password); // Limitiamo l'input a 49 caratteri
 
-    // Chiedere la lingua
-    printf("Inserisci la tua lingua preferita: ");
-    scanf("%19s", utente.lingua); // Limitiamo l'input a 19 caratteri
+    unsigned short int flag_giusta_lingua = 1;
+    do{
+        // Chiedere la lingua
+        printf("Inserisci la tua lingua preferita (it/en/es/fr): ");
+        scanf("%19s", utente.lingua); // Limitiamo l'input a 19 caratteri
+        
+        for(int i = 0; i < NUM_LINGUE;i++){
+            if(strcmp(utente.lingua,lingue[i])==0){
+                flag_giusta_lingua=0;
+                break;
+            }
+        }
+
+        if(flag_giusta_lingua == 1){
+            printf("Per favore inserisci una lingua accettata (it/en/es/fr) !\n");
+        }
+        
+
+    }while(flag_giusta_lingua != 0);
+    
 
     char message[BUFFER_SIZE];
     creaComando(message,"signup");
@@ -187,7 +207,7 @@ int signUp(){
         // Riceve la risposta dal server
         chiudiSocket(sock);
 
-        return strcmp("-1",buffer) ? 1 : -1; //ok dal server
+        return strcmp("1",buffer)==0 ? 1 : -1; //ok dal server
     }
 
     chiudiSocket(sock);
@@ -324,7 +344,7 @@ int entraStanzaGioco(){
         mandaMessaggio(sock,message);
      
 
-        return strcmp("-1",buffer) ? 1 : -1; //ok dal server
+        return strcmp("1",buffer)==0 ? 1 : -1; //ok dal server
     }
     
 
@@ -381,7 +401,7 @@ int creaStanzaGioco(){
         
        chiudiSocket(sock);
     
-        return strcmp("-1",buffer) ? 1 : -1;
+        return strcmp("1",buffer)==0 ? 1 : -1;
 
     }
     
@@ -445,7 +465,7 @@ int chatParty(){
         
     }
     
-    return strcmp("-1",buffer) ? 1 : -1; //ok dal server
+    return strcmp("1",buffer)==0 ? 1 : -1; //ok dal server
     
     
 
