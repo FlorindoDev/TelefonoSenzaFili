@@ -4,6 +4,7 @@
 #define MAX_UTENTE 50
 
 #include <pthread.h>
+//#include "../Stanze/Stanze.h"
 
 typedef struct Utente{
     char nome[MAX_UTENTE];
@@ -31,7 +32,7 @@ Utente * getNext(Utente *);
 
 void setPthread(Utente *, pthread_t);
 
-int removeUtenteFromThread(Utente*,pthread_t, int);
+int stampaLista(Utente*);
 
 #include "Utente.c"
 

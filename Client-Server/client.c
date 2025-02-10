@@ -15,6 +15,7 @@
 
 #define PORT 8080
 #define BUFFER_SIZE 1024
+#define EXIT_MESSAGE "c0886be5e66f118ea41bd90727881825"
 
 
 //Menu dopo essere loggato
@@ -28,7 +29,7 @@ int creaStanzaGioco();
 int entraStanzaGioco();
 void * Thread_ChatParty(void *args);
 int chatParty();
-//void DisconnectedHandler(int);
+void DisconnectedHandler(int);
 void * Thread_ChatParty(void *args);
 
 //Funzione creazione del messaggio ben formattato
@@ -49,11 +50,11 @@ Stanza stanza;
 
 int main() {
 
-    /*struct sigaction sa2;
+    struct sigaction sa2;
     sa2.sa_handler = DisconnectedHandler;
 
     sigemptyset(&sa2.sa_mask);
-    sigaction(SIGINT, &sa2, NULL);*/
+    sigaction(SIGINT, &sa2, NULL);
 
 
     int scelta;
@@ -102,12 +103,12 @@ int main() {
     return 0;
 }
 
-/*
+
 void DisconnectedHandler(int input){
-    char message[BUFFER_SIZE] = "SIGKILL";
+    char message[BUFFER_SIZE] = EXIT_MESSAGE;
     mandaMessaggio(socket_partita, message);
     exit(0);
-}*/
+}
 
 void * Thread_ChatParty(void *args){
 

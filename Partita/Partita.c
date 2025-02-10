@@ -18,11 +18,16 @@ pthread_mutex_t mutex_stato = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t cond_chat = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t mutex_chat = PTHREAD_MUTEX_INITIALIZER;
 
+pthread_cond_t cond_game = PTHREAD_COND_INITIALIZER;
+pthread_mutex_t mutex_game = PTHREAD_MUTEX_INITIALIZER;
+
+/* pthread_key_t flag_key; */
+pthread_key_t flag_key_game;
+
 int server_fd;
 struct sockaddr_in server_addr;
 socklen_t addr_len = sizeof(server_addr);
 Stanza stanza_corrente;
-int flag = 0;
 
 int AperturaSocket();
 void timerHomeMade(int , int); //tempo , quante volte 
@@ -30,12 +35,13 @@ void * Thread_Game(void *args);
 void Game();
 void ThreadKill();
 void CloseThread(int input);
+void NoCrashHendler(int input);
 
 
 void gestioneNuovaConnessione(int * socket, char * buffer, Utente * utente, Message msg);
 
 int main(int argc, char *argv[]){
-
+    
     int pipe_read = atoi(argv[1]);
     int pipe_write = atoi(argv[2]);
     read(pipe_read, &stanza_corrente, sizeof(Stanza));
@@ -44,6 +50,8 @@ int main(int argc, char *argv[]){
 
     write(pipe_write,&(server_addr.sin_port),sizeof(server_addr.sin_port));
 
+    /* pthread_key_create(&flag_key, free);*/
+    pthread_key_create(&flag_key_game, free); 
 
     pthread_t thread;
     if (pthread_create(&thread, NULL, Thread_Game,NULL) != 0) {
@@ -79,18 +87,38 @@ int main(int argc, char *argv[]){
 
 }
 
-/* void CloseThread(int input){
-    if(removeUtenteFromThread(stanza_corrente.listaPartecipanti,pthread_self(),stanza_corrente.num_players) == 0){
+void CloseThread(int input){
+    printf("prima rimozione\n");
+    printf("io sono in canc %ld\n", pthread_self());
+    pthread_mutex_lock(&(stanza_corrente.light));
+    stanza_corrente.listaPartecipanti = removeUtenteFromThread(stanza_corrente.listaPartecipanti,pthread_self(),stanza_corrente.num_players,&stanza_corrente);
+    if( stanza_corrente.listaPartecipanti == NULL){
+        pthread_mutex_unlock(&(stanza_corrente.light));
         exit(0);
     }else{
+        printf("prima il numero è %d\n", stanza_corrente.num_players);
         stanza_corrente.num_players--;
+        printf("dopo il numero è %d\n", stanza_corrente.num_players);
+        pthread_mutex_unlock(&(stanza_corrente.light));
+        printf("sbloccato dopo canc\n");
+        pthread_cond_signal(&cond_stato);
+        printf("signal dopo canc\n");
+        pthread_exit(NULL);
+
     }
-} */
+    pthread_mutex_unlock(&(stanza_corrente.light));
+}
 
 void UnlockChat(int input){
+
+    /* int *flag_uscita = (int *)pthread_getspecific(flag_key);
+    *flag_uscita=1; */
     printf("UnlockChat\n");
-    //chatParty(NULL,NULL,NULL);
-    flag=1;
+}
+
+void NoCrashHendler(int input){
+
+    printf("NoCrashHendler\n");
 }
 
 //fare che quando uno chiuda la connessione il thread toglie l'utente
@@ -104,12 +132,24 @@ void * Thread_GestioneNuovaConnessione(void *args){
     sigemptyset(&sa.sa_mask);
     sigaction(SIGUSR1, &sa, NULL);
 
-    /* struct sigaction sa2;
+    struct sigaction sa2;
     sa2.sa_handler = CloseThread;
 
+    
     sa2.sa_flags = 0; // Assicura che read venga interrotta
     sigemptyset(&sa2.sa_mask);
-    sigaction(SIGUSR2, &sa2, NULL); */
+    sigaction(SIGUSR2, &sa2, NULL);
+
+    struct sigaction sa3;
+    sa2.sa_handler = NoCrashHendler;
+
+    sa3.sa_flags = 0; // Assicura che read venga interrotta
+    sigemptyset(&sa3.sa_mask);
+    sigaction(SIGPIPE, &sa3, NULL);
+
+    /* int *flag = malloc(sizeof(int));
+    *flag = 0;
+    pthread_setspecific(flag_key, flag); */
 
 
     pthread_cleanup_push(cleanup_handler_connection, args);
@@ -144,6 +184,7 @@ void addPlayerToParty(Utente * utente){
     }
     printf("dopo culo\n");
     setNextInOrder(&stanza_corrente, utente);
+    pthread_cond_signal(&cond_game);
     printf("dopo set\n");
     
     //pthread_mutex_unlock(&mutex_stato);
@@ -158,6 +199,7 @@ void broadcast(int * sender_socket, char * sender_messagge){
     for(int i=0;i<stanza_corrente.num_players;i++){
         printf("nel for read\n");
         int user_socket = getUserSocket(in_esame);
+        if(user_socket == -1)continue;
         if(sender_socket != NULL){
             if(user_socket != *sender_socket) send(user_socket, sender_messagge, strlen(sender_messagge), 0);
         }else{
@@ -183,16 +225,11 @@ void chatParty(int * socket, char * buffer, Utente * utente){
 
     while(getStato(&stanza_corrente, &mutex_stato) == SOSPESA){
 
-
         printf("prima read\n");
         printf("%d\n",*(socket));
-        riceviRisposta(*socket, buffer, BUFFER_SIZE);
-        if(flag){
-            flag = 0;
-            return;
-        }
+        riceviRispostaSignal(*socket, buffer, BUFFER_SIZE/* ,flag_key */);
         printf("dopo read\n");
-
+    
         //aggiusta
         strcpy(buffer2,"");
         strcat(buffer2,"<");
@@ -223,7 +260,10 @@ void timerHomeMade(int time, int intervallo){
 
 void * Thread_Game(void *args){
 
-    char bufferPartita[BUFFER_SIZE];
+    //char bufferPartita[BUFFER_SIZE];
+    int *flag = malloc(sizeof(int));
+    *flag = 0;
+    pthread_setspecific(flag_key_game, flag);
     while(getStato(&stanza_corrente, &mutex_stato) != FINITA){
         printf("prima del gioco\n");
         Game();
@@ -257,16 +297,28 @@ void Game(){
 
     setIniziata(&stanza_corrente, &mutex_stato);
 
-    pthread_mutex_lock(&(stanza_corrente.light));
+    //pthread_mutex_lock(&(stanza_corrente.light));
 
     Utente * in_esame = stanza_corrente.listaPartecipanti;
     char parola[MAX_PAROLA]="";
     char tmp_parola[MAX_PAROLA]="";
     int user_socket = getUserSocket(in_esame);
     for(int i=0;i<stanza_corrente.num_players;i++){
+        printf("numero di clearpleayer%d-%d\n", i,stanza_corrente.num_players);
+        int *flag_uscita = (int *)pthread_getspecific(flag_key_game);
         send(user_socket, "\nè il tuo turno:\n", strlen("\nè il tuo turno:\n"), 0);
-        strcpy(tmp_parola,parola);
-        riceviRisposta(user_socket,parola,MAX_PAROLA);
+        riceviRispostaGame(user_socket,parola,MAX_PAROLA , flag_key_game, in_esame->thread);
+        if(*flag_uscita==1){
+            *flag_uscita=0;
+            strcpy(parola,"");
+            i--;
+            printf("sono GAME e mi sono bloccato\n");
+            pthread_mutex_lock(&mutex_game);
+            pthread_cond_wait(&cond_game,&mutex_game);
+            pthread_mutex_unlock(&mutex_game);
+            printf("sono GAME e mi sono ripreso\n");
+            stampaLista(stanza_corrente.listaPartecipanti);
+        }
         strcat(tmp_parola,parola);
         in_esame = getNext(in_esame);
         if(in_esame != NULL){
@@ -274,15 +326,16 @@ void Game(){
             user_socket = getUserSocket(in_esame);
             
             send(user_socket, tmp_parola, strlen(tmp_parola), 0);
-            printf("parola finale %s: \n", tmp_parola);
+            printf("parola finale %d: %s \n", i,tmp_parola);
         }
     }
-    pthread_mutex_unlock(&(stanza_corrente.light));
+    //pthread_mutex_unlock(&(stanza_corrente.light));
     setSospesa(&stanza_corrente, &mutex_stato);
 
     broadcast(NULL,tmp_parola);
     pthread_cond_broadcast(&cond_stato);
     pthread_cond_broadcast(&cond_chat);
+    printf("cond_chat brodcast\n");
     //sleep(5); //forse è vitale
     
 }

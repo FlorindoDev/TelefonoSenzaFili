@@ -28,6 +28,7 @@ typedef struct Stanza{
     enum Stato stato;
     Utente proprietario;
     Utente * listaPartecipanti;
+    Utente * coda;
     pid_t pid_proccesso_stanza;
     unsigned short int port;
     unsigned short int num_players;
@@ -138,6 +139,7 @@ void setIniziata(Stanza* stanza_corrente, pthread_mutex_t* mutex_stato);
 
 void setSospesa(Stanza* stanza_corrente, pthread_mutex_t* mutex_stato);
 
+Utente* removeUtenteFromThread(Utente*,pthread_t, int, Stanza*);
 
 
 #include "Stanze.c"

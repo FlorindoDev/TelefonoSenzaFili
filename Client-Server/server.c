@@ -154,8 +154,8 @@ char* controlloRichiestaUtente(const char *input, Utente * utente) {
 
     }else if (isCreate(&msg)){
         
-        Stanza * tmp = (Stanza *) malloc(sizeof(Stanza));
-        Utente * proprietario = (Utente *) malloc(sizeof(Utente));
+        Stanza * tmp = (Stanza *) calloc(sizeof(Stanza),1);
+        Utente * proprietario = (Utente *) calloc(sizeof(Utente),1);
 
         initUtente(proprietario,msg.nome,msg.password,msg.lingua,msg.funzione,0);
         

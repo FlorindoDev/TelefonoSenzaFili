@@ -32,14 +32,78 @@ int chiudiSocket(int socket){
     close(socket);
 }
 
-char* riceviRisposta(int socket, char * buffer, int grandezza_buffer){
+char* riceviRispostaSignal(int socket, char * buffer, int grandezza_buffer/* , pthread_key_t flag_key */){
 
+    /* int *flag_uscita = (int *)pthread_getspecific(flag_key); */
     int charPassati = read(socket, buffer, grandezza_buffer);
-    /* printf("char passati %d:\n", charPassati);
-    if(charPassati <= 0){
+    printf("char passati %d:\n", charPassati);
+
+    
+    /* if(charPassati <= 0 && *flag_uscita==0){
+
+        printf("pirma del flag %p:\n", flag_uscita);
+        *flag_uscita=0;
+
         pthread_kill(pthread_self(),SIGUSR2);
     } */
 
+    if (charPassati < grandezza_buffer){
+        buffer[charPassati]='\0';
+    }
+    printf("Risposta dal server: %s\n", buffer);
+
+    if(strcmp(buffer, EXIT_MESSAGE) == 0){
+        buffer="";
+        pthread_kill(pthread_self(),SIGUSR2);
+    }
+
+    
+    //printf("Risposta dal server: %s\n", buffer);
+    //printf("char passati %d:\n", charPassati);
+    return buffer;
+
+}
+
+
+char* riceviRispostaGame(int socket, char * buffer, int grandezza_buffer, pthread_key_t flag_key_game, pthread_t thread_user ){
+
+    int *flag_uscita = (int *)pthread_getspecific(flag_key_game); 
+    int charPassati = read(socket, buffer, grandezza_buffer);
+    printf("char passati %d:\n", charPassati);
+
+    
+    /* if(charPassati <= 0){
+        printf("Sto facendo il segnale %d:\n", charPassati);
+        *flag_uscita=1;
+        pthread_kill(pthread_self(),SIGUSR2);
+    } */
+
+    if (charPassati < grandezza_buffer){
+        buffer[charPassati]='\0';
+    }
+    printf("Risposta dal server: %s\n", buffer);
+
+    if(strcmp(buffer, EXIT_MESSAGE) == 0){
+
+        buffer="";
+        *flag_uscita=1;
+        printf("io sono self %ld sto uccidendo %ld\n", pthread_self(), thread_user);
+        pthread_kill(thread_user,SIGUSR2);
+        printf("dopo pthread_kill\n");
+    }
+
+
+    //printf("Risposta dal server: %s\n", buffer);
+    printf("char passati %d:\n", charPassati);
+    return buffer;
+
+}
+
+
+char* riceviRisposta(int socket, char * buffer, int grandezza_buffer){
+
+    int charPassati = read(socket, buffer, grandezza_buffer);
+    
     if (charPassati < grandezza_buffer){
         buffer[charPassati]='\0';
     }
