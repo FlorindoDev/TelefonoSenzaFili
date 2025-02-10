@@ -144,7 +144,9 @@ int login(){
        
         // Riceve la risposta dal server
         riceviRisposta(sock,buffer,BUFFER_SIZE);
-        
+        strcpy(utente.lingua,buffer);
+        riceviRisposta(sock,buffer,BUFFER_SIZE);
+
         chiudiSocket(sock);
     
         return strcmp("-1",buffer) ? 1 : -1; //ok dal server

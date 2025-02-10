@@ -1,5 +1,5 @@
 
-int login(PGconn* conn,Utente* utente){
+int login(PGconn* conn,Utente* utente, char * ling){
     
     char query[512];
     snprintf(query, sizeof(query), "SELECT * FROM Utente WHERE nome = '%s' AND Password_Utente = '%s'", utente->nome, utente->password);
@@ -18,6 +18,7 @@ int login(PGconn* conn,Utente* utente){
 
         //Prende la lingua
         strcpy(utente->lingua,PQgetvalue(res,0,2));
+        strcpy(ling,PQgetvalue(res,0,2));
         
         PQclear(res);
         return 1; // Login riuscito

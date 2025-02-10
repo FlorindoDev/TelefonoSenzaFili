@@ -39,7 +39,7 @@ void Game();
 void ThreadKill();
 void CloseThread(int input);
 void NoCrashHendler(int input);
-
+char* Traduzione(char*, Utente*, Utente*);
 
 void gestioneNuovaConnessione(int * socket, char * buffer, Utente * utente, Message msg);
 
@@ -218,7 +218,44 @@ void broadcast(int * sender_socket, char * sender_messagge){
     pthread_mutex_unlock(&(stanza_corrente.light));
 }
 
+char* Traduzione(char* s, Utente* u1, Utente* u2){
 
+    char request[4000]="";
+    char response[BUFFER_SIZE]="";
+    // Corpo della richiesta (dati della traduzione)
+    char post_data[BUFFER_SIZE]="";
+    int sock = -1;
+    int socket_partita = -1;
+    struct sockaddr_in serv_addrr_g;
+
+    sock = creaSocket(&serv_addrr_g,5000);
+    
+    snprintf(post_data, sizeof(post_data),"q=%s&source=%s&target=%s",s,u1->lingua,u2->lingua);
+    // Creazione della richiesta HTTP POST
+    snprintf(request, sizeof(request),
+             "POST /translate HTTP/1.1\r\n"
+             "Host: %s:%d\r\n"
+             "Content-Type: application/x-www-form-urlencoded\r\n"
+             "Content-Length: %zu\r\n"
+             "Connection: close\r\n"
+             "\r\n"
+             "%s",
+             "127.0.0.1", 5000, strlen(post_data), post_data);
+
+    // Invio della richiesta al server
+    printf("MSG:\n%s\n", request);
+    send(sock, request, strlen(request), 0);
+
+    // Ricezione della risposta
+    int bytes_received = recv(sock, response, sizeof(response) - 1, 0);
+    if (bytes_received > 0) {
+        response[bytes_received] = '\0';
+        printf("Risposta del server:\n%s\n", response);
+    }
+
+    return "";
+
+}
 
 void chatParty(int * socket, char * buffer, Utente * utente){
     
@@ -326,6 +363,7 @@ void Game(){
             stampaLista(stanza_corrente.listaPartecipanti);
         }
         strcat(tmp_parola,parola);
+        strcpy(tmp_parola,Traduzione(tmp_parola,in_esame,getNextInOrder(in_esame,stanza_corrente.direzione)));
         in_esame = getNextInOrder(in_esame,stanza_corrente.direzione);
         if(in_esame != NULL){
             //tradure parola arrivata 

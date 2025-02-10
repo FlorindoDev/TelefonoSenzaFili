@@ -4,9 +4,9 @@
 #include <string.h>
 #include "../Utente/Utente.h"
 
-int login(PGconn *conn,Utente*);
+int login(PGconn *,Utente*, char *);
 
-int register_user(PGconn *conn,Utente*);
+int register_user(PGconn *,Utente*);
 
 #include "auth.c"
 

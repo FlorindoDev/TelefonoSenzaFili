@@ -21,9 +21,9 @@
 ListStanze* listStanze = NULL;
 
 
-char* controlloRichiestaUtente(const char *, Utente *);
+char* controlloRichiestaUtente(const char *, Utente *, int *);
 char* registerUser(PGconn * , Utente *);
-char* loginUser(PGconn * , Utente *);
+char* loginUser(PGconn * , Utente *, char*);
 void gestioneNuovaConnessione(int* new_socket, char* buffer, Utente * utente);
 pid_t creazioneProcessoStanza(int* fd);
 int returnPortaPartita(int* fd);
@@ -108,7 +108,7 @@ void gestioneNuovaConnessione(int * new_socket, char* buffer, Utente * utente){
     const char *response;
         
     //mi faccio dare la risposta e gli do l'utente per riempirlo
-    response = controlloRichiestaUtente(buffer, utente);
+    response = controlloRichiestaUtente(buffer, utente, new_socket);
     
     printf("MEssaggio da inviare %s\n", response);
     send(*new_socket, response, strlen(response), 0);
@@ -117,9 +117,9 @@ void gestioneNuovaConnessione(int * new_socket, char* buffer, Utente * utente){
 
 }
 
-char * loginUser(PGconn* conn, Utente * utente){
+char * loginUser(PGconn* conn, Utente * utente, char * ling){
     conn = connect_to_DB();
-    char * response = login(conn,utente) ? "1" : "-1";
+    char * response = login(conn,utente,ling) ? "1" : "-1";
     PQfinish(conn);
     return response;
 }
@@ -132,8 +132,9 @@ char * registerUser(PGconn* conn, Utente * utente){
     
 }
 
-char* controlloRichiestaUtente(const char *input, Utente * utente) {
+char* controlloRichiestaUtente(const char *input, Utente * utente, int * new_socket) {
 
+    char ling[10]="";
     char * response = "";
     
     Message msg = dividiStringa(input, ":", BUFFER_SIZE);
@@ -149,7 +150,9 @@ char* controlloRichiestaUtente(const char *input, Utente * utente) {
 
     }else if (isLogin(&msg)){
         
-        response = loginUser(conn, utente);
+        response = loginUser(conn, utente, ling);
+        if(strcmp(response,"1")==0)send(*new_socket, ling, strlen(ling), 0);
+        else{send(*new_socket, "-1", strlen("-1"), 0);}
         
 
     }else if (isCreate(&msg)){
