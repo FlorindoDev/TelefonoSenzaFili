@@ -196,20 +196,14 @@ int existUtente(Stanza* stanza, char * nomeUtente){
         
         return 0;
     }
-    printf("prima di while exsits\n");
+
     Utente *tmp = stanza->listaPartecipanti;
-    printUtente(stanza->listaPartecipanti);
     while(tmp != NULL){
-        printf("dopo di while exsits\n");
-        printf("qui: %s-%s\n",tmp->nome,nomeUtente); //si blocca su tmp quando accediamo a nome
         if(strcmp(tmp->nome,nomeUtente) == 0){
-            printf("porcodio\n");
             return 1;
         }
         tmp = tmp->next;
     }
-
-    printf("porcodio2\n");
     return 0;
 }
 
@@ -251,13 +245,10 @@ int insertAtBack(Stanza* stanza, Utente * utente){
         utente->prev = NULL;
         res = 1;
     }else{
-        printf("prima di existis\n");
         if(existUtente(stanza,utente->nome) == 0){
-            printf("dopo di existis\n");
             Utente * prev = stanza->listaPartecipanti;
             Utente * tmp = stanza->listaPartecipanti->next;
             while(tmp != NULL){
-                printf("non finiro while insertatback\n");
                 prev = tmp;
                 tmp = tmp->next;
             }
@@ -270,25 +261,24 @@ int insertAtBack(Stanza* stanza, Utente * utente){
         }    
     }
     
-    printf("fine\n");
     return res;
 }
 
 
 
 int setNextInOrder(Stanza* stanza, Utente * utente){
-    printf("prima del mutex\n");
+
     pthread_mutex_lock(&(stanza->light));
     int res = -1;
-    printf("prima del if della direzione\n");
+
     if(stanza->direzione == ASC){
-        printf("prima del insertback\n");
+
         res = insertAtBack(stanza,utente);
-        printf("dopo del insertback\n");
+
     }else{
-        printf("prima del insertfront\n");
+
         res = insertAtFront(stanza,utente);
-        printf("dopo del insertfront\n");
+
     }
 
     if(res == 1){
@@ -296,7 +286,7 @@ int setNextInOrder(Stanza* stanza, Utente * utente){
         stanza->num_players++;
         
     }
-    printf("fine inserimento\n");
+
     pthread_mutex_unlock(&(stanza->light));
     return res;
 }
@@ -326,9 +316,9 @@ Utente * removeUtenteFromThread(Utente * utente, pthread_t thread, int num_playe
 
     Utente * in_esame = utente;
     while(in_esame != NULL){
-        printf("for rimoziome\n");
+
         if(in_esame->thread==thread){
-            printf("if fatto\n");
+
             if(in_esame->next != NULL){
                 in_esame->next->prev=in_esame->prev;
                 if(in_esame->prev == NULL)utente=in_esame->next;
@@ -351,11 +341,9 @@ Utente * removeUtenteFromThread(Utente * utente, pthread_t thread, int num_playe
                     Stanza->coda=NULL;
                 }
             }
-            //free(in_esame);
         }
         in_esame = getNext(in_esame);
     }
-    printf("fine rimozione\n");
     
     return utente;
 

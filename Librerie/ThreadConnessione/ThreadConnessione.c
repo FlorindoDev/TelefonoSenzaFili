@@ -15,7 +15,6 @@ GestioneConnessioneArgs * initArgUtente(int * new_socket, Utente utente){
 
 void cleanup_handler_connection(void *args){
     GestioneConnessioneArgs * arg=(GestioneConnessioneArgs *) args;
-    printf("sto pulendo sono %lu\n", pthread_self());
     free(arg->socket);
     free(arg);
 }

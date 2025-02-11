@@ -16,8 +16,6 @@ typedef struct Message{
     
 }Message;
 
-//void creaComando(char* message , char* funzione);
-
 Message dividiStringa(const char *input, char separatore[MAX_SEPRATORE], int dimensione);
 
 int isLogin(Message* msg);
