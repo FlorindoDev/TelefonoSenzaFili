@@ -35,28 +35,28 @@ Message dividiStringa(const char *input, char separatore[MAX_SEPRATORE], int dim
     char *saveptr;
     strncpy(copia, input, dimensione); // Copia la stringa ricevuta per non modificarla direttamente
 
-    char *token = strtok_r(copia, ":", &saveptr);
+    char *token = strtok_r(copia, separatore, &saveptr);
     strcpy(msg.funzione,token);
     printf("%s\n",msg.funzione);
 
     //Estraggo il nome Utente passato
-    token = strtok_r(NULL, ":", &saveptr);
+    token = strtok_r(NULL, separatore, &saveptr);
     strcpy(msg.nome,token);
     printf("%s\n",msg.nome);
 
     //Estraggo la password passata
-    token = strtok_r(NULL, ":", &saveptr);
+    token = strtok_r(NULL, separatore, &saveptr);
     strcpy(msg.password,token);
     printf("%s\n",msg.password);
 
-    token = strtok_r(NULL, ":", &saveptr);
+    token = strtok_r(NULL, separatore, &saveptr);
     strcpy(msg.lingua,token);
     
 
-    token = strtok_r(NULL, ":", &saveptr);
+    token = strtok_r(NULL, separatore, &saveptr);
     strcpy(msg.nomeStanza,token);
 
-    token = strtok_r(NULL, ":", &saveptr);
+    token = strtok_r(NULL, separatore, &saveptr);
     msg.direzione = atoi(token);
 
     free(copia);
@@ -68,7 +68,7 @@ int isLogin(Message * msg){
 }
 
 int isSingUp(Message * msg){
-    return strcmp(msg->funzione,"signup") ? 0 : 1;
+    return strcmp(msg->funzione,"singup") ? 0 : 1;
 }
 
 int isCreate(Message * msg){

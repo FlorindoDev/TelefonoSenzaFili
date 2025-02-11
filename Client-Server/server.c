@@ -89,7 +89,6 @@ void * Thread_GestioneNuovaConnessione(void *args){
     
     //lavoro
     gestioneNuovaConnessione(arg->socket,arg->buffer,&(arg->utente));
-    
     printStanze(listStanze);
 
     //utilizzo del henadler prima della chiusura
@@ -125,6 +124,7 @@ char * loginUser(PGconn* conn, Utente * utente, char * ling){
 }
 
 char * registerUser(PGconn* conn, Utente * utente){
+ 
     conn = connect_to_DB();
     char * response = register_user(conn,utente) ? "1" : "-1";
     PQfinish(conn);
@@ -136,9 +136,9 @@ char* controlloRichiestaUtente(const char *input, Utente * utente, int * new_soc
 
     char ling[10]="";
     char * response = "";
-    
+
     Message msg = dividiStringa(input, ":", BUFFER_SIZE);
-    
+
     PGconn* conn = NULL;
 
     initUtente(utente,msg.nome,msg.password,msg.lingua,msg.funzione,0);

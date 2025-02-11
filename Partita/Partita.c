@@ -4,6 +4,8 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <signal.h>
+#include <curl/curl.h>
+#include <jansson.h>
 
 #include "../Librerie/Stanze/Stanze.h"
 #include "../Librerie/ThreadConnessione/ThreadConnessione.h"
@@ -40,6 +42,7 @@ void ThreadKill();
 void CloseThread(int input);
 void NoCrashHendler(int input);
 char* Traduzione(char*, Utente*, Utente*);
+void broadcastTraduzione(int *, char *, Utente *);
 
 void gestioneNuovaConnessione(int * socket, char * buffer, Utente * utente, Message msg);
 
@@ -97,7 +100,8 @@ void CloseThread(int input){
     stanza_corrente.listaPartecipanti = removeUtenteFromThread(stanza_corrente.listaPartecipanti,pthread_self(),stanza_corrente.num_players,&stanza_corrente);
     if( stanza_corrente.listaPartecipanti == NULL){
         pthread_mutex_unlock(&(stanza_corrente.light));
-        exit(0);
+        stanza_corrente.num_players--;
+        pthread_exit(NULL);
     }else{
         printf("prima il numero è %d\n", stanza_corrente.num_players);
         stanza_corrente.num_players--;
@@ -189,7 +193,7 @@ void addPlayerToParty(Utente * utente){
     }
     printf("dopo culo\n");
     setNextInOrder(&stanza_corrente, utente);
-    inCoda--;
+    if(inCoda > 0)inCoda--;
     pthread_cond_signal(&cond_game);
     printf("dopo set\n");
     
@@ -218,43 +222,127 @@ void broadcast(int * sender_socket, char * sender_messagge){
     pthread_mutex_unlock(&(stanza_corrente.light));
 }
 
+
+void broadcastTraduzione(int * sender_socket, char * sender_messagge,Utente * last_user){
+
+    pthread_mutex_lock(&(stanza_corrente.light));
+    Utente * in_esame = stanza_corrente.listaPartecipanti;
+    char tmp_parola_brodcast[BUFFER_SIZE] = "";
+    strcpy(tmp_parola_brodcast,sender_messagge);
+    printf("prima del for\n");
+    for(int i=0;i<stanza_corrente.num_players;i++){
+        printf("nel for read\n");
+        int user_socket = getUserSocket(in_esame);
+        if(user_socket == -1)continue;
+        if(sender_socket != NULL){
+            if(user_socket != *sender_socket){ 
+                strcpy(tmp_parola_brodcast,Traduzione(sender_messagge,last_user,in_esame));
+                send(user_socket, tmp_parola_brodcast, strlen(tmp_parola_brodcast), 0);
+                
+            }
+        }else{
+            strcpy(tmp_parola_brodcast,Traduzione(sender_messagge,last_user,in_esame));
+            send(user_socket, tmp_parola_brodcast, strlen(tmp_parola_brodcast), 0); 
+        }
+        in_esame = getNext(in_esame);
+        
+    }
+    printf("fine for read\n");
+    pthread_mutex_unlock(&(stanza_corrente.light));
+}
+
+// Funzione di callback per gestire i dati ricevuti
+size_t write_callback(void *ptr, size_t size, size_t nmemb, char *data) {
+    size_t total_size = size * nmemb;
+    strncat(data, ptr, total_size);  // Aggiunge i dati al buffer
+    return total_size;
+}
+
+char tmp[4096] = "";
+
+
 char* Traduzione(char* s, Utente* u1, Utente* u2){
 
-    char request[4000]="";
-    char response[BUFFER_SIZE]="";
-    // Corpo della richiesta (dati della traduzione)
-    char post_data[BUFFER_SIZE]="";
-    int sock = -1;
-    int socket_partita = -1;
-    struct sockaddr_in serv_addrr_g;
+    if(u2==NULL || u1==NULL) return s;
 
-    sock = creaSocket(&serv_addrr_g,5000);
-    
-    snprintf(post_data, sizeof(post_data),"q=%s&source=%s&target=%s",s,u1->lingua,u2->lingua);
-    // Creazione della richiesta HTTP POST
-    snprintf(request, sizeof(request),
-             "POST /translate HTTP/1.1\r\n"
-             "Host: %s:%d\r\n"
-             "Content-Type: application/x-www-form-urlencoded\r\n"
-             "Content-Length: %zu\r\n"
-             "Connection: close\r\n"
-             "\r\n"
-             "%s",
-             "127.0.0.1", 5000, strlen(post_data), post_data);
+    CURL *curl;
+    CURLcode res;
+    json_t *translatedText;
+    char post_data[4096] = "";
+    char response_data[4096] = "";  // Buffer per memorizzare la risposta del server
 
-    // Invio della richiesta al server
-    printf("MSG:\n%s\n", request);
-    send(sock, request, strlen(request), 0);
+    // Inizializza la libreria cURL
+    printf("prima della init\n");
 
-    // Ricezione della risposta
-    int bytes_received = recv(sock, response, sizeof(response) - 1, 0);
-    if (bytes_received > 0) {
-        response[bytes_received] = '\0';
-        printf("Risposta del server:\n%s\n", response);
+    curl_global_init(CURL_GLOBAL_DEFAULT);
+    curl = curl_easy_init();
+
+    printf("dopo init\n");
+
+    if(curl) {
+
+        printf("dento curl1\n");
+        // Impostare l'URL di destinazione
+        curl_easy_setopt(curl, CURLOPT_URL, "http://nifty_franklin:5000/translate");
+        printf("dento curl2\n");
+        // Impostare i dati da inviare (equivalente a -d "q=cane&source=it&target=en")
+        
+        printf("dento curl3\n");
+        snprintf(post_data, sizeof(post_data), "q=%s&source=%s&target=%s", s, u1->lingua, u2->lingua);
+        printf("dento curl4\n");
+        // Specificare i dati da inviare tramite POST
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data);
+        printf("dento curl5\n");
+        // Impostare l'intestazione Content-Type
+        struct curl_slist *headers = NULL;
+        headers = curl_slist_append(headers, "Content-Type: application/x-www-form-urlencoded");
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+        printf("dento curl6\n");
+        // Impostare la funzione di callback per gestire la risposta
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, response_data);  // Buffer per salvare i dati
+
+        // Esegui la richiesta POST
+        res = curl_easy_perform(curl);
+        printf("dento curl7\n");
+        // Controlla il risultato della richiesta
+        if(res != CURLE_OK) {
+            fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+        } else {
+            // Stampa la risposta ricevuta
+            printf("Response data: %s\n", response_data);
+
+            json_error_t error;
+            json_t *root = json_loads(response_data, 0, &error);
+
+            printf("dento curl7\n");
+
+            // Estrazione del valore associato a "translatedText"
+            translatedText = json_object_get(root, "translatedText");
+
+            if (json_is_string(translatedText)) {
+                // Stampa del valore
+                printf("Il valore di translatedText è: %s\n", json_string_value(translatedText));
+                strcpy(tmp, json_string_value(translatedText));
+            } else {
+                printf("L'oggetto 'translatedText' non è una stringa\n");
+            }
+
+            // Libera la memoria
+            json_decref(root);
+            printf("dento curl9\n");
+        }
+
+        // Pulisci le intestazioni
+        curl_slist_free_all(headers);
+
+        // Pulisci la sessione cURL
+        curl_easy_cleanup(curl);
     }
 
-    return "";
-
+    // Pulisci la libreria cURL
+    curl_global_cleanup();
+    return tmp ? tmp : "";
 }
 
 void chatParty(int * socket, char * buffer, Utente * utente){
@@ -345,6 +433,7 @@ void Game(){
     Utente * in_esame =  (stanza_corrente.direzione == ASC) ? stanza_corrente.listaPartecipanti : stanza_corrente.coda;
     char parola[MAX_PAROLA]="";
     char tmp_parola[MAX_PAROLA]="";
+    Utente * last_user;
     int user_socket = getUserSocket(in_esame);
     for(int i=0;i<stanza_corrente.num_players;i++){
         printf("numero di clearpleayer%d-%d\n", i,stanza_corrente.num_players);
@@ -362,8 +451,12 @@ void Game(){
             printf("sono GAME e mi sono ripreso\n");
             stampaLista(stanza_corrente.listaPartecipanti);
         }
+        printf("prima concat\n");
+        strcat(tmp_parola," ");
         strcat(tmp_parola,parola);
+        printf("prima traduzione\n");
         strcpy(tmp_parola,Traduzione(tmp_parola,in_esame,getNextInOrder(in_esame,stanza_corrente.direzione)));
+        last_user = in_esame;
         in_esame = getNextInOrder(in_esame,stanza_corrente.direzione);
         if(in_esame != NULL){
             //tradure parola arrivata 
@@ -376,7 +469,7 @@ void Game(){
     //pthread_mutex_unlock(&(stanza_corrente.light));
     setSospesa(&stanza_corrente, &mutex_stato);
 
-    broadcast(NULL,tmp_parola);
+    broadcastTraduzione(NULL,tmp_parola,last_user);
     pthread_cond_broadcast(&cond_stato);
     pthread_cond_broadcast(&cond_chat);
     printf("cond_chat brodcast\n");

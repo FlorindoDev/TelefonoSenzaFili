@@ -143,7 +143,7 @@ int login(){
         mandaMessaggio(sock, message);
        
         // Riceve la risposta dal server
-        riceviRisposta(sock,buffer,BUFFER_SIZE);
+        riceviRisposta(sock,buffer,2);
         strcpy(utente.lingua,buffer);
         riceviRisposta(sock,buffer,BUFFER_SIZE);
 
@@ -173,11 +173,11 @@ int signUp(){
     scanf("%19s", utente.lingua); // Limitiamo l'input a 19 caratteri
 
     char message[BUFFER_SIZE];
-    creaComando(message,"signup");
+    creaComando(message,"singup");
 
-    int successo = creaSocket(&serv_addrr_g,PORT);
+    sock = creaSocket(&serv_addrr_g,PORT);
     
-    if (successo != -1){
+    if (sock != -1){
 
         // Invia il messaggio al server
         mandaMessaggio(sock, message);

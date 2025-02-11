@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS=-g -I/usr/include/postgresql
-LDFLAGS=-lpq -lpthread
+LDFLAGS=-lpq -lpthread -lcurl -ljansson
 
 all: my_program client PartitaEXE
 
