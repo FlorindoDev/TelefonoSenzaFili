@@ -95,3 +95,9 @@ void mandaMessaggio(int socket, char * message){
     
 
 }
+
+void sendLingua(int *new_socket, char * ling, char * response){
+    if(strcmp(response,"1")==0)send(*new_socket, ling, strlen(ling), 0);
+        
+    else send(*new_socket, "-1", strlen("-1"), 0);
+}

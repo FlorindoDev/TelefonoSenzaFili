@@ -12,6 +12,7 @@
 #include "../Librerie/Utente/Utente.h"
 #include "../Librerie/ThreadConnessione/ThreadConnessione.h"
 #include "../Librerie/MessageEditor/MessageEditor.h"
+#include "../Librerie/GestioneConnessione/GestioneConnessione.h"
 
 
 //il BUFFER_SIZE STA IN ThreadConnessione
@@ -25,8 +26,6 @@ char* controlloRichiestaUtente(const char *, Utente *, int *);
 char* registerUser(PGconn * , Utente *);
 char* loginUser(PGconn * , Utente *, char*);
 void gestioneNuovaConnessione(int* new_socket, char* buffer, Utente * utente);
-pid_t creazioneProcessoStanza(int* fd);
-int returnPortaPartita(int* fd);
 
 
 int mainServer() {
@@ -73,7 +72,6 @@ int mainServer() {
         
     }
     
-    
     close(server_fd);
 
     return 0;
@@ -101,15 +99,13 @@ void gestioneNuovaConnessione(int * new_socket, char* buffer, Utente * utente){
 
     // Riceve il messaggio dal client
     read(*new_socket, buffer, BUFFER_SIZE);
-    printf("\nElaborazione della stringa ricevuta...\n");
-    printf("\nRicevuto %s, sono %lu\n", buffer, pthread_self());
+
     // Gestisce la stringa separata da ":"
     const char *response;
         
     //mi faccio dare la risposta e gli do l'utente per riempirlo
     response = controlloRichiestaUtente(buffer, utente, new_socket);
-    
-    printf("MEssaggio da inviare %s\n", response);
+
     send(*new_socket, response, strlen(response), 0);
     // Chiudi la connessione
     close(*new_socket);
@@ -151,8 +147,7 @@ char* controlloRichiestaUtente(const char *input, Utente * utente, int * new_soc
     }else if (isLogin(&msg)){
         
         response = loginUser(conn, utente, ling);
-        if(strcmp(response,"1")==0)send(*new_socket, ling, strlen(ling), 0);
-        else{send(*new_socket, "-1", strlen("-1"), 0);}
+        sendLingua(new_socket, ling, response);
         
 
     }else if (isCreate(&msg)){
@@ -191,19 +186,6 @@ char* controlloRichiestaUtente(const char *input, Utente * utente, int * new_soc
       
         response = showStanze(listStanze);
 
-        
-        
-           
-    }else if (strcmp(utente->funzione,"join") == 0){
-        
-        //To do
-
-
-        //msg.nomeStanza
-      
-    
-        response = "-1";
-        
     }else{
 
         response = "-1";
