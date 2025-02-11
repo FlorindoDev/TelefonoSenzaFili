@@ -1,50 +1,5 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <arpa/inet.h>
-#include <signal.h>
-#include <curl/curl.h>
-#include <jansson.h>
+#include "Partita.h"
 
-#include "../Librerie/Stanze/Stanze.h"
-#include "../Librerie/ThreadConnessione/ThreadConnessione.h"
-#include "../Librerie/MessageEditor/MessageEditor.h"
-#include "../Librerie/GestioneConnessione/GestioneConnessione.h"
-
-#define MAX_PAROLA 5000
-#define MIN_PLAYER 2
-
-pthread_cond_t cond_stato = PTHREAD_COND_INITIALIZER;
-pthread_mutex_t mutex_stato = PTHREAD_MUTEX_INITIALIZER;
-
-pthread_cond_t cond_chat = PTHREAD_COND_INITIALIZER;
-pthread_mutex_t mutex_chat = PTHREAD_MUTEX_INITIALIZER;
-
-pthread_cond_t cond_game = PTHREAD_COND_INITIALIZER;
-pthread_mutex_t mutex_game = PTHREAD_MUTEX_INITIALIZER;
-
-int inCoda=0;
-
-/* pthread_key_t flag_key; */
-pthread_key_t flag_key_game;
-
-int server_fd;
-struct sockaddr_in server_addr;
-socklen_t addr_len = sizeof(server_addr);
-Stanza stanza_corrente;
-
-int AperturaSocket();
-void timerHomeMade(int , int); //tempo , quante volte 
-void * Thread_Game(void *args);
-void Game();
-void ThreadKill();
-void CloseThread(int input);
-void NoCrashHendler(int input);
-char* Traduzione(char*, Utente*, Utente*);
-void broadcastTraduzione(int *, char *, Utente *);
-
-void gestioneNuovaConnessione(int * socket, char * buffer, Utente * utente, Message msg);
 
 int main(int argc, char *argv[]){
     
@@ -56,7 +11,7 @@ int main(int argc, char *argv[]){
 
     write(pipe_write,&(server_addr.sin_port),sizeof(server_addr.sin_port));
 
-    /* pthread_key_create(&flag_key, free);*/
+   
     pthread_key_create(&flag_key_game, free); 
 
     pthread_t thread;
@@ -66,7 +21,6 @@ int main(int argc, char *argv[]){
     }
     pthread_detach(thread);
     
-
     
     // Metti il server in ascolto
     
@@ -118,15 +72,22 @@ void CloseThread(int input){
 }
 
 void UnlockChat(int input){
-
-    /* int *flag_uscita = (int *)pthread_getspecific(flag_key);
-    *flag_uscita=1; */
     printf("UnlockChat\n");
 }
 
 void NoCrashHendler(int input){
-
     printf("NoCrashHendler\n");
+    int *flag_uscita = (int *)pthread_getspecific(flag_key_game);
+    *flag_uscita = 1;
+    
+}
+
+void HelndlerSetter(struct sigaction * sing, __sighandler_t handler,int flag,int singal_name){
+    sing->sa_handler = handler;
+
+    sing->sa_flags = flag; // Assicura che read venga interrotta
+    sigemptyset(&(sing->sa_mask));
+    sigaction(singal_name, sing, NULL);
 }
 
 //fare che quando uno chiuda la connessione il thread toglie l'utente
@@ -134,35 +95,16 @@ void * Thread_GestioneNuovaConnessione(void *args){
     GestioneConnessioneArgs * arg=(GestioneConnessioneArgs *) args;
     
     struct sigaction sa;
-    sa.sa_handler = UnlockChat;
-
-    sa.sa_flags = 0; // Assicura che read venga interrotta
-    sigemptyset(&sa.sa_mask);
-    sigaction(SIGUSR1, &sa, NULL);
-
     struct sigaction sa2;
-    sa2.sa_handler = CloseThread;
+    //struct sigaction sa3;
 
-    
-    sa2.sa_flags = 0; // Assicura che read venga interrotta
-    sigemptyset(&sa2.sa_mask);
-    sigaction(SIGUSR2, &sa2, NULL);
-
-    struct sigaction sa3;
-    sa2.sa_handler = NoCrashHendler;
-
-    sa3.sa_flags = 0; // Assicura che read venga interrotta
-    sigemptyset(&sa3.sa_mask);
-    sigaction(SIGPIPE, &sa3, NULL);
-
-    /* int *flag = malloc(sizeof(int));
-    *flag = 0;
-    pthread_setspecific(flag_key, flag); */
-
+    HelndlerSetter(&sa, UnlockChat,0,SIGUSR1);
+    HelndlerSetter(&sa2, CloseThread,0,SIGUSR2);
+    //HelndlerSetter(&sa3, NoCrashHendler,0,SIGPIPE); 
 
     pthread_cleanup_push(cleanup_handler_connection, args);
 
-    printf("%d\n",*(arg->socket));
+
     read(*(arg->socket), arg->buffer, sizeof(arg->buffer));
 
     Message msg = dividiStringa(arg->buffer,":",sizeof(arg->buffer));
@@ -281,30 +223,30 @@ char* Traduzione(char* s, Utente* u1, Utente* u2){
 
     if(curl) {
 
-        printf("dento curl1\n");
+        //printf("dento curl1\n");
         // Impostare l'URL di destinazione
         curl_easy_setopt(curl, CURLOPT_URL, "http://nifty_franklin:5000/translate");
-        printf("dento curl2\n");
+        //printf("dento curl2\n");
         // Impostare i dati da inviare (equivalente a -d "q=cane&source=it&target=en")
         
-        printf("dento curl3\n");
+        //printf("dento curl3\n");
         snprintf(post_data, sizeof(post_data), "q=%s&source=%s&target=%s", s, u1->lingua, u2->lingua);
-        printf("dento curl4\n");
+        //printf("dento curl4\n");
         // Specificare i dati da inviare tramite POST
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data);
-        printf("dento curl5\n");
+        //printf("dento curl5\n");
         // Impostare l'intestazione Content-Type
         struct curl_slist *headers = NULL;
         headers = curl_slist_append(headers, "Content-Type: application/x-www-form-urlencoded");
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-        printf("dento curl6\n");
+        //printf("dento curl6\n");
         // Impostare la funzione di callback per gestire la risposta
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, response_data);  // Buffer per salvare i dati
 
         // Esegui la richiesta POST
         res = curl_easy_perform(curl);
-        printf("dento curl7\n");
+        //printf("dento curl7\n");
         // Controlla il risultato della richiesta
         if(res != CURLE_OK) {
             fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
@@ -315,7 +257,7 @@ char* Traduzione(char* s, Utente* u1, Utente* u2){
             json_error_t error;
             json_t *root = json_loads(response_data, 0, &error);
 
-            printf("dento curl7\n");
+            //printf("dento curl7\n");
 
             // Estrazione del valore associato a "translatedText"
             translatedText = json_object_get(root, "translatedText");
@@ -330,7 +272,7 @@ char* Traduzione(char* s, Utente* u1, Utente* u2){
 
             // Libera la memoria
             json_decref(root);
-            printf("dento curl9\n");
+            //printf("dento curl9\n");
         }
 
         // Pulisci le intestazioni
@@ -395,6 +337,11 @@ void * Thread_Game(void *args){
     //char bufferPartita[BUFFER_SIZE];
     int *flag = malloc(sizeof(int));
     *flag = 0;
+
+    struct sigaction sa3;
+
+    HelndlerSetter(&sa3, NoCrashHendler,0,SIGPIPE); 
+
     pthread_setspecific(flag_key_game, flag);
     while(getStato(&stanza_corrente, &mutex_stato) != FINITA){
         printf("prima del gioco\n");
@@ -431,12 +378,13 @@ void Game(){
     //pthread_mutex_lock(&(stanza_corrente.light));
 
     Utente * in_esame =  (stanza_corrente.direzione == ASC) ? stanza_corrente.listaPartecipanti : stanza_corrente.coda;
+    Utente * last_user=in_esame;
+    int flag_out=0;
     char parola[MAX_PAROLA]="";
     char tmp_parola[MAX_PAROLA]="";
-    Utente * last_user;
     int user_socket = getUserSocket(in_esame);
     for(int i=0;i<stanza_corrente.num_players;i++){
-        printf("numero di clearpleayer%d-%d\n", i,stanza_corrente.num_players);
+        printf("numero di pleayer%d-%d porta %d\n", i,stanza_corrente.num_players,user_socket);
         int *flag_uscita = (int *)pthread_getspecific(flag_key_game);
         send(user_socket, "\nè il tuo turno:\n", strlen("\nè il tuo turno:\n"), 0);
         riceviRispostaGame(user_socket,parola,MAX_PAROLA , flag_key_game, in_esame->thread);
@@ -449,6 +397,8 @@ void Game(){
             pthread_cond_wait(&cond_game,&mutex_game);
             pthread_mutex_unlock(&mutex_game);
             printf("sono GAME e mi sono ripreso\n");
+            in_esame = getNextInOrder(last_user,stanza_corrente.direzione);
+            flag_out=1;
             stampaLista(stanza_corrente.listaPartecipanti);
         }
         printf("prima concat\n");
@@ -457,11 +407,10 @@ void Game(){
         printf("prima traduzione\n");
         strcpy(tmp_parola,Traduzione(tmp_parola,in_esame,getNextInOrder(in_esame,stanza_corrente.direzione)));
         last_user = in_esame;
-        in_esame = getNextInOrder(in_esame,stanza_corrente.direzione);
+        if(flag_out==0)in_esame = getNextInOrder(in_esame,stanza_corrente.direzione);
+        flag_out=0;
+        user_socket = getUserSocket(in_esame);
         if(in_esame != NULL){
-            //tradure parola arrivata 
-            user_socket = getUserSocket(in_esame);
-            
             send(user_socket, tmp_parola, strlen(tmp_parola), 0);
             printf("parola finale %d: %s \n", i,tmp_parola);
         }
@@ -490,6 +439,8 @@ void gestioneNuovaConnessione(int * socket, char * buffer, Utente* utente,Messag
             chatParty(socket,buffer,utente);
             printf("fine chat\n");
         }
+        
+        printf("CHAT IN ATTESSA\n");
         pthread_mutex_lock(&mutex_chat);
         pthread_cond_wait(&cond_chat,&mutex_chat);
         pthread_mutex_unlock(&mutex_chat);

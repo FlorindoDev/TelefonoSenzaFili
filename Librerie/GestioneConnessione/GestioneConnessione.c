@@ -62,7 +62,7 @@ char* riceviRispostaGame(int socket, char * buffer, int grandezza_buffer, pthrea
     }
 
 
-    if(strcmp(buffer, EXIT_MESSAGE) == 0){
+    if(strcmp(buffer, EXIT_MESSAGE) == 0 || *flag_uscita==1){
         buffer="";
         *flag_uscita=1;
         pthread_kill(thread_user,SIGUSR2);
@@ -81,7 +81,7 @@ char* riceviRisposta(int socket, char * buffer, int grandezza_buffer){
     if (charPassati < grandezza_buffer){
         buffer[charPassati]='\0';
     }
-
+    printf("Risposta Server: %s\n", buffer);
     return buffer;
 }
 
@@ -91,7 +91,7 @@ void mandaMessaggio(int socket, char * message){
 
     // Invia il messaggio al server
     send(socket, message, strlen(message), 0);
-
+    printf("Mando: %s\n", message);
     
 
 }
