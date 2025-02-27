@@ -1,6 +1,7 @@
 #include "Partita2.h"
 
 
+
 //varabbili per la connessione
 int server_fd;
 struct sockaddr_in server_addr;
@@ -21,18 +22,16 @@ int main(int argc, char *argv[]){
     write(pipe_write,&(server_addr.sin_port),sizeof(server_addr.sin_port));
 
 
-    //thread partita
-    /*
+    //Creo il thread della partita
     pthread_t thread;
-    if (pthread_create(&thread, NULL, Thread_Game,NULL) != 0) {
+    if (pthread_create(&thread, NULL, thread_Game,NULL) != 0) {
         perror("Errore nella creazione del thread");
         return -1;
     }
     pthread_detach(thread);
-    */
+   
     
     // Metti il server in ascolto
-    
     if (listen(server_fd, 5) < 0) {
         perror("Errore nella listen");
         close(server_fd);
@@ -87,6 +86,235 @@ int AperturaSocket(){
     return 0;
 }
 
+void * thread_Game(void *args){
+    while(getStato(&stanza_corrente, &mutex_stato) != FINITA){
+        Game();
+    }
+}
+
+void riprendiChat(){
+    pthread_mutex_lock(&mutex_chat);
+    pthread_cond_broadcast(&cond_chat);  // Sveglia i thread della chat
+    pthread_mutex_unlock(&mutex_chat);  
+}
+
+void Game(){
+    while(stanza_corrente.num_players < MIN_PLAYER);
+    timerHomeMade(5,2);
+    //Logica del gioco
+    setIniziata(&stanza_corrente, &mutex_stato);
+    printf("Gioco in corso\n");
+
+    //sleep(5);//simulo la partita
+    
+    propagateGamePhrase(); //propaga il messaggio tra tutti i giocatori
+
+    setSospesa(&stanza_corrente, &mutex_stato);
+    riprendiChat();
+}
+
+void propagateGamePhrase(){
+
+    Utente * in_esame =  (stanza_corrente.direzione == ASC) ? stanza_corrente.listaPartecipanti : stanza_corrente.coda;
+
+    char phrase[GAME_PHRASE_MAX_SIZE]="";
+    char user_contribute[BUFFER_SIZE]="";
+
+    for(int i=0;i<stanza_corrente.num_players;i++){
+
+        if(in_esame!=NULL){
+
+            int user_socket=getUserSocket(in_esame);
+
+            //verifico se il socket è ancora valido
+            if(user_socket == -1 || !isSocketConnected(user_socket)){
+
+                //rimuoviGiocatore(in_esame);
+                stanza_corrente.listaPartecipanti=removeUtenteFromThread(stanza_corrente.listaPartecipanti, in_esame->thread, stanza_corrente.num_players, &stanza_corrente);
+                stanza_corrente.num_players--;
+                printf("numero giocatori rimanenti: %d\n",stanza_corrente.num_players);
+
+            }
+            else{
+
+                send(user_socket, phrase, strlen(phrase), 0);
+                send(user_socket, "\nè il tuo turno:\n", strlen("\nè il tuo turno:\n"), 0);
+
+                if (!riceviRispostaConTimeout(user_socket, user_contribute, GAME_PHRASE_MAX_SIZE, 30)) {
+                    // Timeout o errore di ricezione
+                    rimuoviGiocatore(in_esame);
+                    printf("Timeout o errore per il giocatore %s, passo al prossimo\n", in_esame->nome);
+                    
+                }else{
+
+                    strcat(phrase,user_contribute); //concateno i contributi dell' utente alla frase principale di gioco
+                    strcpy(user_contribute,"");//pulisco il buffer del contributo
+
+                }
+
+
+            }
+
+            in_esame = getNextInOrder(in_esame,stanza_corrente.direzione);
+
+        }
+
+    }
+
+    broadcast(NULL,phrase);
+}
+
+int isSocketConnected(int sock){
+    char buff[1];
+    int result = recv(sock, buff, 1, MSG_PEEK | MSG_DONTWAIT);
+    
+    if (result == 0) {
+        // La connessione è stata chiusa correttamente
+        return 0;
+    } else if (result < 0) {
+        // Controlla se è un errore temporaneo
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+            // Non ci sono dati ma la connessione è viva
+            return 1;
+        } else {
+            // Errore di connessione
+            return 0;
+        }
+    }
+    // Ci sono dati da leggere, la connessione è attiva
+    return 1;
+}
+
+void rimuoviGiocatore(Utente * utente){
+    pthread_mutex_lock(&(stanza_corrente.light));
+
+    Utente *in_esame=stanza_corrente.listaPartecipanti;
+    Utente *prev=NULL;
+
+    while(in_esame!=NULL){
+        if(in_esame->nome == utente->nome){ //trovato
+
+            if(in_esame->prev==NULL){ //se sono la testa
+                if(in_esame->next==NULL){ //e sono anche la coda
+                    in_esame=NULL;
+                    stanza_corrente.listaPartecipanti=NULL;
+                    stanza_corrente.coda=NULL;
+                    //ero l'ultimo giocatore rimasto quindi termina il gioco
+                }else{
+                    //sono solo la testa quindi prendi il prossimo e fallo diventare la testa
+                    Utente *next=in_esame->next;
+                    next->prev=NULL;
+                    in_esame=NULL;
+                    stanza_corrente.listaPartecipanti=next;
+                    
+
+                }
+            }else{
+
+                if(in_esame->next==NULL){ 
+                    //se sono la coda prendi il mio precedente e imposta la coda 
+                    prev->next=NULL;
+                    stanza_corrente.coda=prev;
+
+                }else{
+
+                    //sto in mezzo e devo fare i collegamenti giusti
+                    prev->next=in_esame->next;
+                    in_esame->next->prev=prev;
+
+                }
+            }
+
+            stanza_corrente.num_players--;
+
+            // Chiudi il socket dell'utente
+            int user_socket = getUserSocket(utente);
+            if (user_socket != -1) {
+                close(user_socket);
+            }
+            
+            printf("giocatore eliminato num: %d\n",stanza_corrente.num_players);
+            return;
+
+        }
+
+        prev=in_esame;
+        in_esame=in_esame->next; //vai avanti di uno step
+
+    }
+
+    pthread_mutex_unlock(&(stanza_corrente.light));
+}
+
+int riceviRispostaConTimeout(int socket, char *buffer, size_t size, int timeout_seconds) {
+    /* struct pollfd fd;
+    fd.fd = socket;
+    fd.events = POLLIN;
+    
+    // Poll con timeout in millisecondi
+    int ret = poll(&fd, 1, timeout_seconds * 1000);
+    
+    if (ret <= 0) {
+        // Timeout o errore
+        return 0;
+    }
+    
+    if (fd.revents & POLLIN) {
+        // C'è qualcosa da leggere
+        ssize_t bytes = recv(socket, buffer, size - 1, 0);
+        if (bytes <= 0) {
+            // Errore o connessione chiusa
+            return 0;
+        }
+        buffer[bytes] = '\0';
+        return 1;
+    }
+    
+    return 0; */
+    time_t start_time = time(NULL);
+    struct pollfd fd;
+    fd.fd = socket;
+    fd.events = POLLIN;
+    
+    // Buffer per i controlli periodici
+    char check_buffer[1];
+    
+    // Loop fino al timeout totale
+    while (time(NULL) - start_time < timeout_seconds) {
+        // Poll con un timeout breve (es. 2 secondi)
+        int ret = poll(&fd, 1, 2000);
+        
+        if (ret < 0) {
+            // Errore nella poll
+            return -1;
+        } 
+        else if (ret == 0) {
+            // Nessun dato disponibile, verifica se il socket è ancora connesso
+            if (!isSocketConnected(socket)) {
+                // Il client si è disconnesso
+                return -1;
+            }
+            // Altrimenti continua ad aspettare
+            continue;
+        }
+        
+        // Ci sono dati da leggere
+        if (fd.revents & POLLIN) {
+            ssize_t bytes = recv(socket, buffer, size - 1, 0);
+            if (bytes <= 0) {
+                // Il client si è disconnesso
+                return -1;
+            }
+            buffer[bytes] = '\0';
+            return 1; // Successo
+        }
+    }
+    
+    // Timeout raggiunto
+    return 0;
+    
+}
+
 void * Thread_GestioneNuovaConnessione(void *args){
 
     GestioneConnessioneArgs * arg=(GestioneConnessioneArgs *) args;
@@ -121,6 +349,12 @@ void entroInAttesa(){
     pthread_mutex_unlock(&mutex_stato);
 }
 
+void chatPause(){
+    pthread_mutex_lock(&mutex_chat);
+    pthread_cond_wait(&cond_chat,&mutex_chat);
+    pthread_mutex_unlock(&mutex_chat);
+}
+
 void addPlayer(Utente * utente){
     setNextInOrder(&stanza_corrente,utente);
 
@@ -132,24 +366,57 @@ void addNameToMessage(char * message, Utente * utente){
     strcat(message,">: ");
 }
 
+
 void enterInChat(int * socket, char * buffer, Utente * utente){
 
-    char join_message[BUFFER_SIZE]="";
+ /*    char join_message[BUFFER_SIZE]="";
     strcat(join_message,utente->nome);
     strcat(join_message," joined in the chat");
     broadcast(socket,join_message);
 
     char message[BUFFER_SIZE] = "";
+
     while(getStato(&stanza_corrente,&mutex_stato) != INIZIATA){
+        
         strcpy(message,"");
         addNameToMessage(message, utente);
-        strcat(message,riceviRisposta(*socket,buffer,strlen(buffer)));
+        strcat(message,riceviRisposta(*socket,buffer,BUFFER_SIZE));
+        printf("stringa broadcast: %s",buffer);
         broadcast(socket,message);
         
+    } */
+
+    struct pollfd fds[1];
+    fds[0].fd = *socket;
+    fds[0].events = POLLIN;  // Monitoriamo la possibilità di lettura
+
+    char message[BUFFER_SIZE] = "";
+
+    while (getStato(&stanza_corrente,&mutex_stato) != INIZIATA) {
+        int ret = poll(fds, 1, TIMEOUT);
+
+        if (ret == -1) {
+            perror("poll");
+            break;
+        } else if (ret == 0) {
+            // Timeout: nessun dato ricevuto, controllo flag per cambiare modalità
+            printf("Timeout, controllo stato...\n");
+            continue;
+        }
+
+        if (fds[0].revents & POLLIN) {
+            strcpy(message,"");
+            addNameToMessage(message, utente);
+            strcat(message,riceviRisposta(*socket,buffer,BUFFER_SIZE));
+            printf("stringa broadcast: %s",buffer);
+            broadcast(socket,message);
+        }
     }
 
     
 }
+
+
 
 void broadcast(int * sender_socket, char * sender_messagge){
 
@@ -179,5 +446,24 @@ void ChooseAction(int * socket, char * buffer, Utente * utente){
         entroInAttesa();
     }
     addPlayer(utente);
-    enterInChat(socket, buffer,utente);
+
+    while(getStato(&stanza_corrente,&mutex_stato) != FINITA){
+        enterInChat(socket, buffer,utente);
+        chatPause();
+    }
+}
+
+
+
+void timerHomeMade(int time, int intervallo){
+    char message[BUFFER_SIZE]="Rimmangono ";
+    char tempo_rimanente[BUFFER_SIZE];
+    for(int i=0;i<time;i+=intervallo){
+        sprintf(tempo_rimanente, "%d", (time-i));
+        strcat(message,tempo_rimanente);
+        strcat(message," secondi");
+        broadcast(NULL,message);
+        strcpy(message, "Rimmangono ");
+        sleep(intervallo);
+    }
 }
