@@ -50,11 +50,11 @@ Stanza stanza;
 
 int main() {
 
-    struct sigaction sa2;
+    /* struct sigaction sa2;
     sa2.sa_handler = DisconnectedHandler;
 
     sigemptyset(&sa2.sa_mask);
-    sigaction(SIGINT, &sa2, NULL);
+    sigaction(SIGINT, &sa2, NULL); */
 
 
     int scelta;
@@ -106,7 +106,7 @@ int main() {
 
 void DisconnectedHandler(int input){
     char message[BUFFER_SIZE] = EXIT_MESSAGE;
-    mandaMessaggio(socket_partita, message);
+    //mandaMessaggio(socket_partita, message);
     exit(0);
 }
 

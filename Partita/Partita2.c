@@ -9,9 +9,14 @@ socklen_t addr_len = sizeof(server_addr);
 
 Stanza stanza_corrente;
 
+int players_waiting=0;
+
 int AperturaSocket();
 
 int main(int argc, char *argv[]){
+
+    // Nel main, prima di altre operazioni:
+    signal(SIGPIPE, SIG_IGN);
     
     int pipe_read = atoi(argv[1]);
     int pipe_write = atoi(argv[2]);
@@ -92,11 +97,6 @@ void * thread_Game(void *args){
     }
 }
 
-void riprendiChat(){
-    pthread_mutex_lock(&mutex_chat);
-    pthread_cond_broadcast(&cond_chat);  // Sveglia i thread della chat
-    pthread_mutex_unlock(&mutex_chat);  
-}
 
 void Game(){
     while(stanza_corrente.num_players < MIN_PLAYER);
@@ -110,58 +110,114 @@ void Game(){
     propagateGamePhrase(); //propaga il messaggio tra tutti i giocatori
 
     setSospesa(&stanza_corrente, &mutex_stato);
+    addAllPlayersWaiting();
     riprendiChat();
 }
 
 void propagateGamePhrase(){
 
-    Utente * in_esame =  (stanza_corrente.direzione == ASC) ? stanza_corrente.listaPartecipanti : stanza_corrente.coda;
+    printList();
+    
+    Utente *in_esame = (stanza_corrente.direzione == ASC) ? stanza_corrente.listaPartecipanti : stanza_corrente.coda;
+    char phrase[GAME_PHRASE_MAX_SIZE] = "";
+    char user_contribute[BUFFER_SIZE] = "";
+    
+    int remaining_players = stanza_corrente.num_players;
+    int i = 0;
 
-    char phrase[GAME_PHRASE_MAX_SIZE]="";
-    char user_contribute[BUFFER_SIZE]="";
-
-    for(int i=0;i<stanza_corrente.num_players;i++){
-
-        if(in_esame!=NULL){
-
-            int user_socket=getUserSocket(in_esame);
-
-            //verifico se il socket è ancora valido
-            if(user_socket == -1 || !isSocketConnected(user_socket)){
-
-                //rimuoviGiocatore(in_esame);
-                stanza_corrente.listaPartecipanti=removeUtenteFromThread(stanza_corrente.listaPartecipanti, in_esame->thread, stanza_corrente.num_players, &stanza_corrente);
-                stanza_corrente.num_players--;
-                printf("numero giocatori rimanenti: %d\n",stanza_corrente.num_players);
-
+    printf("Direzione della stanza: %s\n",(stanza_corrente.direzione == ASC) ? "ASC" : "DESC");
+    
+    while (i < remaining_players && in_esame != NULL) {
+        int user_socket = getUserSocket(in_esame);
+        
+        // Salva un riferimento al prossimo giocatore prima di potenziali modifiche
+        Utente *next_player = getNextInOrder(in_esame, stanza_corrente.direzione);
+        
+        // Verifica se il socket è ancora valido
+        if (user_socket == -1 || !isSocketConnected(user_socket)) {
+            printf("Il giocatore %s si è disconnesso, passo al prossimo\n", in_esame->nome);
+            rimuoviGiocatore(in_esame);
+            if(!aggiungiProssimoDallaCoda()){
+                remaining_players--; //se non c' era nessuno in coda
             }
-            else{
-
-                send(user_socket, phrase, strlen(phrase), 0);
-                send(user_socket, "\nè il tuo turno:\n", strlen("\nè il tuo turno:\n"), 0);
-
-                if (!riceviRispostaConTimeout(user_socket, user_contribute, GAME_PHRASE_MAX_SIZE, 30)) {
-                    // Timeout o errore di ricezione
-                    rimuoviGiocatore(in_esame);
-                    printf("Timeout o errore per il giocatore %s, passo al prossimo\n", in_esame->nome);
-                    
-                }else{
-
-                    strcat(phrase,user_contribute); //concateno i contributi dell' utente alla frase principale di gioco
-                    strcpy(user_contribute,"");//pulisco il buffer del contributo
-
-                }
-
-
-            }
-
-            in_esame = getNextInOrder(in_esame,stanza_corrente.direzione);
-
         }
+        else {
+            // Invia messaggio al giocatore e attendi risposta
+            int send_result1 = 0;
+            int send_result2 = 0;
+            
+            // Se phrase è vuoto (all'inizio o dopo un reset), invia solo il messaggio del turno
+            if (strlen(phrase) > 0) {
+                send_result1 = send(user_socket, phrase, strlen(phrase), 0);
+                if (send_result1 < 0) {
+                    printf("Errore nell'invio della frase al giocatore %s: %s\n", in_esame->nome, strerror(errno));
+                }
+            }
+            
+            send_result2 = send(user_socket, "\nè il tuo turno:\n", strlen("\nè il tuo turno:\n"), 0);
+            if (send_result2 < 0) {
+                printf("Errore nell'invio del messaggio di turno al giocatore %s: %s\n", in_esame->nome, strerror(errno));
+            }
+            
+            // Controlla se c'è stato un errore in uno dei due invii
+            if ((strlen(phrase) > 0 && send_result1 < 0) || send_result2 < 0) {
+                printf("Errore nell'invio dei messaggi al giocatore %s, passo al prossimo\n", in_esame->nome);
+                rimuoviGiocatore(in_esame);
+                remaining_players--;
+            }
+            else if (!riceviRispostaConTimeout(user_socket, user_contribute, GAME_PHRASE_MAX_SIZE, 30)) {
+                // Timeout o errore di ricezione
+                printf("Timeout o errore per il giocatore %s, passo al prossimo\n", in_esame->nome);
+                rimuoviGiocatore(in_esame);
+                if(!aggiungiProssimoDallaCoda()){
+                    remaining_players--; //se non c' era nessuno in coda
+                }
+                printList();
+            }
+            else {
+                // Risposta ricevuta con successo
+                printf("Risposta ricevuta con successo dal giocatore %s: '%s'\n", in_esame->nome, user_contribute);
+                strcat(phrase, user_contribute); 
+                strcpy(user_contribute, "");
+                i++; // Incrementa solo se un giocatore ha risposto con successo
+            }
+        }
+        
+        // Passa al prossimo giocatore
+        in_esame = next_player;
+        printList();
+    }
+    
+    // Aggiorna il numero di giocatori nella stanza
+    stanza_corrente.num_players = remaining_players;
 
+    printf("ALLA FINE DEL GIOCO LA LISTA è:\n");
+    printList();
+    
+    // Se c'è almeno una frase, fai il broadcast
+    if (strlen(phrase) > 0) {
+        broadcast(NULL, phrase);
+    }
+    else {
+        broadcast(NULL, "Nessun giocatore ha contribuito alla frase.");
     }
 
-    broadcast(NULL,phrase);
+}
+
+void printList(){
+    Utente* in_esame=stanza_corrente.listaPartecipanti;
+
+    char lista[1000]="";
+    char tmp[20]="";
+    while(in_esame!=NULL){
+        strcat(tmp,in_esame->nome);
+        strcat(tmp,"->");
+        strcat(lista,tmp);
+
+        in_esame=in_esame->next;
+    }
+
+    printf("\n\n---LISTA--- %s\n\n",lista);
 }
 
 int isSocketConnected(int sock){
@@ -234,6 +290,7 @@ void rimuoviGiocatore(Utente * utente){
             }
             
             printf("giocatore eliminato num: %d\n",stanza_corrente.num_players);
+            pthread_mutex_unlock(&(stanza_corrente.light));  // Sblocca prima di uscire
             return;
 
         }
@@ -286,13 +343,13 @@ int riceviRispostaConTimeout(int socket, char *buffer, size_t size, int timeout_
         
         if (ret < 0) {
             // Errore nella poll
-            return -1;
+            return 0;
         } 
         else if (ret == 0) {
             // Nessun dato disponibile, verifica se il socket è ancora connesso
             if (!isSocketConnected(socket)) {
                 // Il client si è disconnesso
-                return -1;
+                return 0;
             }
             // Altrimenti continua ad aspettare
             continue;
@@ -303,7 +360,7 @@ int riceviRispostaConTimeout(int socket, char *buffer, size_t size, int timeout_
             ssize_t bytes = recv(socket, buffer, size - 1, 0);
             if (bytes <= 0) {
                 // Il client si è disconnesso
-                return -1;
+                return 0;
             }
             buffer[bytes] = '\0';
             return 1; // Successo
@@ -345,9 +402,32 @@ void * Thread_GestioneNuovaConnessione(void *args){
 
 void entroInAttesa(){
     pthread_mutex_lock(&mutex_stato);
+    players_waiting++;
     pthread_cond_wait(&cond_stato,&mutex_stato);
     pthread_mutex_unlock(&mutex_stato);
 }
+
+int aggiungiProssimoDallaCoda(){
+    pthread_mutex_lock(&mutex_stato);
+    if(players_waiting>0){
+        pthread_cond_signal(&cond_stato);
+        players_waiting--;
+
+        pthread_mutex_unlock(&mutex_stato);
+        return 1;
+    }else{
+        pthread_mutex_unlock(&mutex_stato);
+        return 0;
+    }
+    
+}
+
+void addAllPlayersWaiting(){
+    pthread_mutex_lock(&mutex_stato);
+    pthread_cond_broadcast(&cond_stato);
+    pthread_mutex_unlock(&mutex_stato); 
+}
+
 
 void chatPause(){
     pthread_mutex_lock(&mutex_chat);
@@ -355,8 +435,15 @@ void chatPause(){
     pthread_mutex_unlock(&mutex_chat);
 }
 
+void riprendiChat(){
+    pthread_mutex_lock(&mutex_chat);
+    pthread_cond_broadcast(&cond_chat);  // Sveglia i thread della chat
+    pthread_mutex_unlock(&mutex_chat);  
+}
+
 void addPlayer(Utente * utente){
     setNextInOrder(&stanza_corrente,utente);
+    printf("\n\nGIOCATORE AGGIUNTO %s\n\n",utente->nome);
 
 }
 
@@ -405,11 +492,25 @@ void enterInChat(int * socket, char * buffer, Utente * utente){
         }
 
         if (fds[0].revents & POLLIN) {
-            strcpy(message,"");
+            /* strcpy(message,"");
             addNameToMessage(message, utente);
             strcat(message,riceviRisposta(*socket,buffer,BUFFER_SIZE));
             printf("stringa broadcast: %s",buffer);
-            broadcast(socket,message);
+            broadcast(socket,message); */
+            ssize_t bytes = recv(*socket, buffer, BUFFER_SIZE, 0);
+            if (bytes <= 0) { 
+                // Se recv() ritorna 0, il client si è disconnesso
+                printf("Il client %s si è disconnesso dalla chat.\n", utente->nome);
+                rimuoviGiocatore(utente);
+                close(*socket);
+                return; 
+            }
+            buffer[bytes] = '\0';
+            strcpy(message, "");
+            addNameToMessage(message, utente);
+            strcat(message, buffer);
+            printf("stringa broadcast: %s", buffer);
+            broadcast(socket, message);
         }
     }
 
@@ -427,6 +528,7 @@ void broadcast(int * sender_socket, char * sender_messagge){
 
         int user_socket = getUserSocket(in_esame);
         if(user_socket == -1)continue;
+        
 
         if(sender_socket != NULL){
             if(user_socket != *sender_socket) send(user_socket, sender_messagge, strlen(sender_messagge), 0);
@@ -444,6 +546,7 @@ void ChooseAction(int * socket, char * buffer, Utente * utente){
 
     if(getStato(&stanza_corrente, &mutex_stato) == INIZIATA){
         entroInAttesa();
+        printf("sono uscito dall attesaaaa utente:%s\n",utente->nome);
     }
     addPlayer(utente);
 

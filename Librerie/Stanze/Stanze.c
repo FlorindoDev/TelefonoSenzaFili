@@ -258,6 +258,9 @@ int insertAtBack(Stanza* stanza, Utente * utente){
             utente->next = NULL;
             stanza->coda = utente;
             res = 1;
+
+            printf("\n\n[insertAtBack]GIOCATORE AGGIUNTO %s\n\n",utente->nome);
+
         }    
     }
     

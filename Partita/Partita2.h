@@ -58,4 +58,11 @@ void propagateGamePhrase();
 
 int isSocketConnected();
 
+void addAllPlayersWaiting();
+void riprendiChat();
+
+int aggiungiProssimoDallaCoda();
+
+void printList();
+
 #endif
