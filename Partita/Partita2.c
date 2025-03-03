@@ -141,8 +141,7 @@ void Game(){
             if(!aggiungiProssimoDallaCoda()){
                 remaining_players--; //se non c' era nessuno in coda
             }
-        }
-        else {
+        }else{
             // Invia messaggio al giocatore e attendi risposta
             int send_result1 = 0;
             int send_result2 = 0;
@@ -161,12 +160,13 @@ void Game(){
             }
             
             // Controlla se c'è stato un errore in uno dei due invii
-            if ((strlen(phrase) > 0 && send_result1 < 0) || send_result2 < 0) {
+            if (send_result1 < 0 || send_result2 < 0) {
                 printf("Errore nell'invio dei messaggi al giocatore %s, passo al prossimo\n", in_esame->nome);
                 rimuoviGiocatore(in_esame);
                 remaining_players--;
             }
-            else if (!riceviRispostaConTimeout(user_socket, user_contribute, GAME_PHRASE_MAX_SIZE, 30)) {
+
+            else if (!riceviRispostaConTimeout(user_socket, user_contribute, GAME_PHRASE_MAX_SIZE, 60)) {
                 // Timeout o errore di ricezione
                 printf("Timeout o errore per il giocatore %s, passo al prossimo\n", in_esame->nome);
                 rimuoviGiocatore(in_esame);
