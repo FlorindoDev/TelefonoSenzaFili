@@ -114,96 +114,7 @@ void Game(){
     riprendiChat();
 }
 
-/* void propagateGamePhrase(){
 
-    printList();
-    
-    Utente *in_esame = (stanza_corrente.direzione == ASC) ? stanza_corrente.listaPartecipanti : stanza_corrente.coda;
-    char phrase[GAME_PHRASE_MAX_SIZE] = "";
-    char user_contribute[BUFFER_SIZE] = "";
-    
-    int remaining_players = stanza_corrente.num_players;
-    int i = 0;
-
-    printf("Direzione della stanza: %s\n",(stanza_corrente.direzione == ASC) ? "ASC" : "DESC");
-    
-    while (i < remaining_players && in_esame != NULL) {
-        printf("\niterazione numero %d reamining_players: %d\n",i,remaining_players);
-        int user_socket = getUserSocket(in_esame);
-        
-        // Salva un riferimento al prossimo giocatore prima di potenziali modifiche
-        Utente *next_player = getNextInOrder(in_esame, stanza_corrente.direzione);
-        
-        // Verifica se il socket è ancora valido
-        if (user_socket == -1 || !isSocketConnected(user_socket)) {
-            printf("Il giocatore %s si è disconnesso, passo al prossimo\n", in_esame->nome);
-            rimuoviGiocatore(in_esame);
-            if(!aggiungiProssimoDallaCoda()){
-                remaining_players--; //se non c' era nessuno in coda
-            }
-        }else{
-            // Invia messaggio al giocatore e attendi risposta
-            int send_result1 = 0;
-            int send_result2 = 0;
-            
-            // Se phrase è vuoto (all'inizio o dopo un reset), invia solo il messaggio del turno
-            if (strlen(phrase) > 0) {
-                send_result1 = send(user_socket, phrase, strlen(phrase), 0);
-                if (send_result1 < 0) {
-                    printf("Errore nell'invio della frase al giocatore %s: %s\n", in_esame->nome, strerror(errno));
-                }
-            }
-            
-            send_result2 = send(user_socket, "\nè il tuo turno:\n", strlen("\nè il tuo turno:\n"), 0);
-            if (send_result2 < 0) {
-                printf("Errore nell'invio del messaggio di turno al giocatore %s: %s\n", in_esame->nome, strerror(errno));
-            }
-            
-            // Controlla se c'è stato un errore in uno dei due invii
-            if (send_result1 < 0 || send_result2 < 0) {
-                printf("Errore nell'invio dei messaggi al giocatore %s, passo al prossimo\n", in_esame->nome);
-                rimuoviGiocatore(in_esame);
-                remaining_players--;
-            }
-
-            else if (!riceviRispostaConTimeout(user_socket, user_contribute, GAME_PHRASE_MAX_SIZE, 60)) {
-                // Timeout o errore di ricezione
-                printf("Timeout o errore per il giocatore %s, passo al prossimo\n", in_esame->nome);
-                rimuoviGiocatore(in_esame);
-                if(!aggiungiProssimoDallaCoda()){
-                    remaining_players--; //se non c' era nessuno in coda
-                }
-                printList();
-            }
-            else {
-                // Risposta ricevuta con successo
-                printf("Risposta ricevuta con successo dal giocatore %s: '%s'\n", in_esame->nome, user_contribute);
-                strcat(phrase, user_contribute); 
-                strcpy(user_contribute, "");
-                i++; // Incrementa solo se un giocatore ha risposto con successo
-            }
-        }
-        
-        // Passa al prossimo giocatore
-        in_esame = next_player;
-        printList();
-    }
-    
-    // Aggiorna il numero di giocatori nella stanza
-    stanza_corrente.num_players = remaining_players;
-
-    printf("ALLA FINE DEL GIOCO LA LISTA è:\n");
-    printList();
-    
-    // Se c'è almeno una frase, fai il broadcast
-    if (strlen(phrase) > 0) {
-        broadcast(NULL, phrase);
-    }
-    else {
-        broadcast(NULL, "Nessun giocatore ha contribuito alla frase.");
-    }
-
-} */
 
 void propagateGamePhrase(){
 
@@ -212,6 +123,8 @@ void propagateGamePhrase(){
     Utente *in_esame = (stanza_corrente.direzione == ASC) ? stanza_corrente.listaPartecipanti : stanza_corrente.coda;
     char phrase[GAME_PHRASE_MAX_SIZE] = "";
     char user_contribute[BUFFER_SIZE] = "";
+
+    Utente * last_user;
     
     int remaining_players = stanza_corrente.num_players;
     int i = 0;
@@ -242,6 +155,8 @@ void propagateGamePhrase(){
             } else {
                 // Nessun giocatore aggiunto dalla coda
                 remaining_players--; 
+
+                if(next_temp != NULL) last_user = in_esame;
                 in_esame = next_temp;
             }
         }
@@ -272,7 +187,8 @@ void propagateGamePhrase(){
                 
                 rimuoviGiocatore(in_esame);
                 remaining_players--;
-                
+
+                if(next_temp != NULL) last_user = in_esame;
                 in_esame = next_temp;
             }
             else if (!riceviRispostaConTimeout(user_socket, user_contribute, GAME_PHRASE_MAX_SIZE, 30)) {
@@ -293,18 +209,25 @@ void propagateGamePhrase(){
 
                 rimuoviGiocatore(in_esame);
                 
+                if(next_temp != NULL) last_user = in_esame;
                 in_esame = next_temp;
                 printf("il nome del prossimo utente è %s\n\n",in_esame->nome);
                 printList();
             }
             else {
+
+                Utente *next_temp = getNextInOrder(in_esame, stanza_corrente.direzione);
                 // Risposta ricevuta con successo
                 printf("Risposta ricevuta con successo dal giocatore %s: '%s'\n", in_esame->nome, user_contribute);
+                strcat(phrase, " ");
                 strcat(phrase, user_contribute); 
+                strcpy(phrase,Traduzione(phrase,in_esame,next_temp));
                 strcpy(user_contribute, "");
                 
                 // Passa al prossimo giocatore
-                in_esame = getNextInOrder(in_esame, stanza_corrente.direzione);
+                if(next_temp != NULL) last_user = in_esame;
+                in_esame = next_temp;
+            
                 i++; // Incrementa solo se un giocatore ha risposto con successo
             }
         }
@@ -320,7 +243,8 @@ void propagateGamePhrase(){
     
     // Se c'è almeno una frase, fai il broadcast
     if (strlen(phrase) > 0) {
-        broadcast(NULL, phrase);
+        //broadcast(NULL, phrase);
+        broadcastTraduzione(NULL,phrase,last_user);
     }
     else {
         broadcast(NULL, "Nessun giocatore ha contribuito alla frase.");
@@ -429,30 +353,7 @@ void rimuoviGiocatore(Utente * utente){
 }
 
 int riceviRispostaConTimeout(int socket, char *buffer, size_t size, int timeout_seconds) {
-    /* struct pollfd fd;
-    fd.fd = socket;
-    fd.events = POLLIN;
-    
-    // Poll con timeout in millisecondi
-    int ret = poll(&fd, 1, timeout_seconds * 1000);
-    
-    if (ret <= 0) {
-        // Timeout o errore
-        return 0;
-    }
-    
-    if (fd.revents & POLLIN) {
-        // C'è qualcosa da leggere
-        ssize_t bytes = recv(socket, buffer, size - 1, 0);
-        if (bytes <= 0) {
-            // Errore o connessione chiusa
-            return 0;
-        }
-        buffer[bytes] = '\0';
-        return 1;
-    }
-    
-    return 0; */
+   
     time_t start_time = time(NULL);
     struct pollfd fd;
     fd.fd = socket;
@@ -589,23 +490,7 @@ void addNameToMessage(char * message, Utente * utente){
 
 void enterInChat(int * socket, char * buffer, Utente * utente){
 
- /*    char join_message[BUFFER_SIZE]="";
-    strcat(join_message,utente->nome);
-    strcat(join_message," joined in the chat");
-    broadcast(socket,join_message);
-
-    char message[BUFFER_SIZE] = "";
-
-    while(getStato(&stanza_corrente,&mutex_stato) != INIZIATA){
-        
-        strcpy(message,"");
-        addNameToMessage(message, utente);
-        strcat(message,riceviRisposta(*socket,buffer,BUFFER_SIZE));
-        printf("stringa broadcast: %s",buffer);
-        broadcast(socket,message);
-        
-    } */
-
+ 
     struct pollfd fds[1];
     fds[0].fd = *socket;
     fds[0].events = POLLIN;  // Monitoriamo la possibilità di lettura
@@ -625,11 +510,7 @@ void enterInChat(int * socket, char * buffer, Utente * utente){
         }
 
         if (fds[0].revents & POLLIN) {
-            /* strcpy(message,"");
-            addNameToMessage(message, utente);
-            strcat(message,riceviRisposta(*socket,buffer,BUFFER_SIZE));
-            printf("stringa broadcast: %s",buffer);
-            broadcast(socket,message); */
+           
             ssize_t bytes = recv(*socket, buffer, BUFFER_SIZE, 0);
             if (bytes <= 0) { 
                 // Se recv() ritorna 0, il client si è disconnesso
@@ -648,6 +529,34 @@ void enterInChat(int * socket, char * buffer, Utente * utente){
     }
 
     
+}
+
+void broadcastTraduzione(int * sender_socket, char * sender_messagge,Utente * last_user){
+
+    pthread_mutex_lock(&(stanza_corrente.light));
+    Utente * in_esame = stanza_corrente.listaPartecipanti;
+    char tmp_parola_brodcast[BUFFER_SIZE] = "";
+    strcpy(tmp_parola_brodcast,sender_messagge);
+    printf("prima del for\n");
+    for(int i=0;i<stanza_corrente.num_players;i++){
+        printf("nel for read\n");
+        int user_socket = getUserSocket(in_esame);
+        if(user_socket == -1)continue;
+        if(sender_socket != NULL){
+            if(user_socket != *sender_socket){ 
+                strcpy(tmp_parola_brodcast,Traduzione(sender_messagge,last_user,in_esame));
+                send(user_socket, tmp_parola_brodcast, strlen(tmp_parola_brodcast), 0);
+                
+            }
+        }else{
+            strcpy(tmp_parola_brodcast,Traduzione(sender_messagge,last_user,in_esame));
+            send(user_socket, tmp_parola_brodcast, strlen(tmp_parola_brodcast), 0); 
+        }
+        in_esame = getNext(in_esame);
+        
+    }
+    printf("fine for read\n");
+    pthread_mutex_unlock(&(stanza_corrente.light));
 }
 
 
@@ -702,4 +611,99 @@ void timerHomeMade(int time, int intervallo){
         strcpy(message, "Rimmangono ");
         sleep(intervallo);
     }
+}
+
+// Funzione di callback per gestire i dati ricevuti
+size_t write_callback(void *ptr, size_t size, size_t nmemb, char *data) {
+    size_t total_size = size * nmemb;
+    strncat(data, ptr, total_size);  // Aggiunge i dati al buffer
+    return total_size;
+}
+
+char tmp[4096] = "";
+
+char* Traduzione(char* s, Utente* u1, Utente* u2){
+
+    
+
+    if(u2==NULL || u1==NULL) return s;
+
+    CURL *curl;
+    CURLcode res;
+    json_t *translatedText;
+    char post_data[4096] = "";
+    char response_data[4096] = "";  // Buffer per memorizzare la risposta del server
+
+    // Inizializza la libreria cURL
+    printf("prima della init\n");
+
+    curl_global_init(CURL_GLOBAL_DEFAULT);
+    curl = curl_easy_init();
+
+    printf("dopo init\n");
+
+    if(curl) {
+
+        
+        // Impostare l'URL di destinazione
+        curl_easy_setopt(curl, CURLOPT_URL, "http://192.168.0.149:5000/translate");
+        
+        // Impostare i dati da inviare (equivalente a -d "q=cane&source=it&target=en")
+        
+        
+        snprintf(post_data, sizeof(post_data), "q=%s&source=%s&target=%s", s, u1->lingua, u2->lingua);
+       
+        // Specificare i dati da inviare tramite POST
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data);
+       
+        // Impostare l'intestazione Content-Type
+        struct curl_slist *headers = NULL;
+        headers = curl_slist_append(headers, "Content-Type: application/x-www-form-urlencoded");
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+       
+        // Impostare la funzione di callback per gestire la risposta
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, response_data);  // Buffer per salvare i dati
+
+        // Esegui la richiesta POST
+        res = curl_easy_perform(curl);
+        
+        // Controlla il risultato della richiesta
+
+        if(res != CURLE_OK) {
+            fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+        } else {
+            // Stampa la risposta ricevuta
+            printf("Response data: %s\n", response_data);
+
+            json_error_t error;
+            json_t *root = json_loads(response_data, 0, &error);
+
+
+            // Estrazione del valore associato a "translatedText"
+            translatedText = json_object_get(root, "translatedText");
+
+            if (json_is_string(translatedText)) {
+                // Stampa del valore
+                printf("Il valore di translatedText è: %s\n", json_string_value(translatedText));
+                strcpy(tmp, json_string_value(translatedText));
+            } else {
+                printf("L'oggetto 'translatedText' non è una stringa\n");
+            }
+
+            // Libera la memoria
+            json_decref(root);
+          
+        }
+
+        // Pulisci le intestazioni
+        curl_slist_free_all(headers);
+
+        // Pulisci la sessione cURL
+        curl_easy_cleanup(curl);
+    }
+
+    // Pulisci la libreria cURL
+    curl_global_cleanup();
+    return tmp ? tmp : "";
 }

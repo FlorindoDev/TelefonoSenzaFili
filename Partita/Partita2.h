@@ -65,4 +65,10 @@ int aggiungiProssimoDallaCoda();
 
 void printList();
 
+char* Traduzione(char* s, Utente* , Utente* );
+
+size_t write_callback(void *ptr, size_t size, size_t nmemb, char *data);
+
+void broadcastTraduzione(int * sender_socket, char * sender_messagge,Utente * last_user);
+
 #endif
