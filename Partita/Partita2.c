@@ -114,7 +114,7 @@ void Game(){
     riprendiChat();
 }
 
-void propagateGamePhrase(){
+/* void propagateGamePhrase(){
 
     printList();
     
@@ -128,6 +128,7 @@ void propagateGamePhrase(){
     printf("Direzione della stanza: %s\n",(stanza_corrente.direzione == ASC) ? "ASC" : "DESC");
     
     while (i < remaining_players && in_esame != NULL) {
+        printf("\niterazione numero %d reamining_players: %d\n",i,remaining_players);
         int user_socket = getUserSocket(in_esame);
         
         // Salva un riferimento al prossimo giocatore prima di potenziali modifiche
@@ -202,6 +203,128 @@ void propagateGamePhrase(){
         broadcast(NULL, "Nessun giocatore ha contribuito alla frase.");
     }
 
+} */
+
+void propagateGamePhrase(){
+
+    printList();
+    
+    Utente *in_esame = (stanza_corrente.direzione == ASC) ? stanza_corrente.listaPartecipanti : stanza_corrente.coda;
+    char phrase[GAME_PHRASE_MAX_SIZE] = "";
+    char user_contribute[BUFFER_SIZE] = "";
+    
+    int remaining_players = stanza_corrente.num_players;
+    int i = 0;
+
+    printf("Direzione della stanza: %s\n",(stanza_corrente.direzione == ASC) ? "ASC" : "DESC");
+    
+    while (i < remaining_players && in_esame != NULL) {
+        printf("\niterazione numero %d reamining_players: %d\n",i,remaining_players);
+        int user_socket = getUserSocket(in_esame);
+        
+        // Verifica se il socket è ancora valido
+        if (user_socket == -1 || !isSocketConnected(user_socket)) {
+            printf("Il giocatore %s si è disconnesso, passo al prossimo\n", in_esame->nome);
+            
+            // Salva un riferimento temporaneo al prossimo giocatore prima di rimuovere in_esame
+
+            int aggiunto=aggiungiProssimoDallaCoda();
+
+            sleep(2); //aspetto che venga aggiunto
+
+            Utente *next_temp = getNextInOrder(in_esame, stanza_corrente.direzione);
+            
+            rimuoviGiocatore(in_esame);
+            
+            if(aggiunto){
+                // Un nuovo giocatore è stato aggiunto alla lista, continuiamo da next_temp
+                in_esame = next_temp;
+            } else {
+                // Nessun giocatore aggiunto dalla coda
+                remaining_players--; 
+                in_esame = next_temp;
+            }
+        }
+        else {
+            // Invia messaggio al giocatore e attendi risposta
+            int send_result1 = 0;
+            int send_result2 = 0;
+            
+            // Se phrase è vuoto (all'inizio o dopo un reset), invia solo il messaggio del turno
+            if (strlen(phrase) > 0) {
+                send_result1 = send(user_socket, phrase, strlen(phrase), 0);
+                if (send_result1 < 0) {
+                    printf("Errore nell'invio della frase al giocatore %s: %s\n", in_esame->nome, strerror(errno));
+                }
+            }
+            
+            send_result2 = send(user_socket, "\nè il tuo turno:\n", strlen("\nè il tuo turno:\n"), 0);
+            if (send_result2 < 0) {
+                printf("Errore nell'invio del messaggio di turno al giocatore %s: %s\n", in_esame->nome, strerror(errno));
+            }
+            
+            // Controlla se c'è stato un errore in uno dei due invii
+            if ((strlen(phrase) > 0 && send_result1 < 0) || send_result2 < 0) {
+                printf("Errore nell'invio dei messaggi al giocatore %s, passo al prossimo\n", in_esame->nome);
+                
+                // Salva un riferimento temporaneo al prossimo giocatore prima di rimuovere in_esame
+                Utente *next_temp = getNextInOrder(in_esame, stanza_corrente.direzione);
+                
+                rimuoviGiocatore(in_esame);
+                remaining_players--;
+                
+                in_esame = next_temp;
+            }
+            else if (!riceviRispostaConTimeout(user_socket, user_contribute, GAME_PHRASE_MAX_SIZE, 30)) {
+                // Timeout o errore di ricezione
+                printf("Timeout o errore per il giocatore %s, passo al prossimo\n", in_esame->nome);
+                
+                
+                
+                
+                if(!aggiungiProssimoDallaCoda()){
+                    remaining_players--; //se non c'era nessuno in coda
+                }
+
+                sleep(2); //aspetto che venga aggiunto
+
+                // Salva un riferimento temporaneo al prossimo giocatore prima di rimuovere in_esame
+                Utente *next_temp = getNextInOrder(in_esame, stanza_corrente.direzione);
+
+                rimuoviGiocatore(in_esame);
+                
+                in_esame = next_temp;
+                printf("il nome del prossimo utente è %s\n\n",in_esame->nome);
+                printList();
+            }
+            else {
+                // Risposta ricevuta con successo
+                printf("Risposta ricevuta con successo dal giocatore %s: '%s'\n", in_esame->nome, user_contribute);
+                strcat(phrase, user_contribute); 
+                strcpy(user_contribute, "");
+                
+                // Passa al prossimo giocatore
+                in_esame = getNextInOrder(in_esame, stanza_corrente.direzione);
+                i++; // Incrementa solo se un giocatore ha risposto con successo
+            }
+        }
+        
+        printList();
+    }
+    
+    // Aggiorna il numero di giocatori nella stanza
+    stanza_corrente.num_players = remaining_players;
+
+    printf("ALLA FINE DEL GIOCO LA LISTA è:\n");
+    printList();
+    
+    // Se c'è almeno una frase, fai il broadcast
+    if (strlen(phrase) > 0) {
+        broadcast(NULL, phrase);
+    }
+    else {
+        broadcast(NULL, "Nessun giocatore ha contribuito alla frase.");
+    }
 }
 
 void printList(){
@@ -209,12 +332,14 @@ void printList(){
 
     char lista[1000]="";
     char tmp[20]="";
+
     while(in_esame!=NULL){
         strcat(tmp,in_esame->nome);
         strcat(tmp,"->");
         strcat(lista,tmp);
 
         in_esame=in_esame->next;
+        strcpy(tmp,"");
     }
 
     printf("\n\n---LISTA--- %s\n\n",lista);
@@ -442,7 +567,15 @@ void riprendiChat(){
 }
 
 void addPlayer(Utente * utente){
-    setNextInOrder(&stanza_corrente,utente);
+
+    //se la partita è già iniziata cambia dinamicamente il modo di inserimento
+    if(getStato(&stanza_corrente, &mutex_stato) == INIZIATA){
+        insertInGame(&stanza_corrente,utente);
+        
+    }else{
+        insertAtBackSafe(&stanza_corrente,utente); //se non è iniziata inserisci sempre in coda
+    }
+
     printf("\n\nGIOCATORE AGGIUNTO %s\n\n",utente->nome);
 
 }

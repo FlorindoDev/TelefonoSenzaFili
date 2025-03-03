@@ -133,6 +133,10 @@ setta il prossimo del utente in base alla direzione
 */
 int setNextInOrder(Stanza* , Utente * );
 
+int insertAtBackSafe(Stanza* stanza, Utente * utente);
+
+int insertInGame(Stanza* stanza, Utente * utente);
+
 enum Stato getStato(Stanza*, pthread_mutex_t*);
 
 void setIniziata(Stanza* stanza_corrente, pthread_mutex_t* mutex_stato);

@@ -267,6 +267,45 @@ int insertAtBack(Stanza* stanza, Utente * utente){
     return res;
 }
 
+int insertInGame(Stanza* stanza, Utente * utente){
+    pthread_mutex_lock(&(stanza->light));
+    int res = -1;
+
+    if(stanza->direzione == ASC){
+
+        res = insertAtBack(stanza,utente);
+
+    }else{
+
+        res = insertAtFront(stanza,utente);
+
+    }
+
+    if(res == 1){
+        
+        stanza->num_players++;
+        
+    }
+
+    pthread_mutex_unlock(&(stanza->light));
+    return res;
+}
+
+
+int insertAtBackSafe(Stanza* stanza, Utente * utente){
+    pthread_mutex_lock(&(stanza->light));
+    int res = -1;
+
+    res = insertAtBack(stanza,utente);
+
+    if(res == 1){ 
+        stanza->num_players++;
+    }
+
+    pthread_mutex_unlock(&(stanza->light));
+    return res;
+}
+
 
 
 int setNextInOrder(Stanza* stanza, Utente * utente){
