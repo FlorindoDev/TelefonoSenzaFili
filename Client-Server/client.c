@@ -7,6 +7,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <signal.h>
+#include <math.h>
 
 
 #include "../Librerie/Stanze/Stanze.h"
@@ -26,6 +27,7 @@ int login();
 int signUp();
 int mostraStanzaGioco();
 int creaStanzaGioco();
+int connessionePartita();
 int entraStanzaGioco();
 void * Thread_ChatParty(void *args);
 int chatParty();
@@ -234,9 +236,31 @@ void homeShow(){
                 
                 risultato = creaStanzaGioco();
                 if(risultato == -1){
+                    chiudiSocket(sock);
                     printf("ERRORE : creazione stanza di gioco fallita");
                 }else{
                     printf("SUCCESSO : creazione stanza di gioco creata con successo");
+                    char * f = riceviRisposta(sock, buffer, BUFFER_SIZE);
+
+                    // Rimuovi spazi, caratteri di nuova riga, ecc.
+                    char cleanStr[BUFFER_SIZE];
+                    int j = 0;
+                    for (int i = 0; i < strlen(f); i++) {
+                        if (f[i] >= '0' && f[i] <= '9') {
+                            cleanStr[j++] = f[i];
+                        }
+                    }
+                    cleanStr[j] = '\0';  // Aggiungi terminatore di stringa
+
+                    printf("Stringa originale: '%s'\n", f);
+                    printf("Stringa pulita: '%s'\n", cleanStr);
+
+                    stanza.port = (unsigned short int)atoi(cleanStr);
+                    printf("%hu\n", stanza.port);
+                    chiudiSocket(sock);
+                    sleep(2);
+                    //connessionePartita();
+
                 }
 
                 break;
@@ -326,9 +350,36 @@ int entraStanzaGioco(){
 
         return strcmp("-1",buffer) ? 1 : -1; //ok dal server
     }
-    
 
     return -1;
+}
+
+int connessionePartita(){
+    pthread_t thread;
+    if (pthread_create(&thread, NULL, Thread_ChatParty,NULL) != 0) {
+        perror("Errore nella creazione del thread");
+        return -1;
+    }
+    pthread_detach(thread);
+    
+
+    char message[BUFFER_SIZE];
+    creaComando(message,"join");
+
+    socket_partita = creaSocket(&serv_addrr_g,stanza.port);
+    printf("socket1: %d\n", socket_partita);
+
+    if(socket_partita != -1){
+        
+        // Invia il messaggio al server
+        mandaMessaggio(sock,message);
+     
+
+        return strcmp("-1",buffer) ? 1 : -1; //ok dal server
+    }
+
+    return -1;
+    
 }
 
 int creaStanzaGioco(){
@@ -379,7 +430,8 @@ int creaStanzaGioco(){
         // Riceve la risposta dal server
         riceviRisposta(sock,buffer, BUFFER_SIZE );
         
-       chiudiSocket(sock);
+        //chiudiSocket(sock);
+        
     
         return strcmp("-1",buffer) ? 1 : -1;
 

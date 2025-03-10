@@ -99,19 +99,20 @@ void * thread_Game(void *args){
 
 
 void Game(){
-    while(stanza_corrente.num_players < MIN_PLAYER);
-    timerHomeMade(5,2);
-    //Logica del gioco
-    setIniziata(&stanza_corrente, &mutex_stato);
-    printf("Gioco in corso\n");
+    while(stanza_corrente.num_players >= MIN_PLAYER){
+        timerHomeMade(5,2);
+        //Logica del gioco
+        setIniziata(&stanza_corrente, &mutex_stato);
+        printf("Gioco in corso\n");
 
-    //sleep(5);//simulo la partita
-    
-    propagateGamePhrase(); //propaga il messaggio tra tutti i giocatori
+        //sleep(5);//simulo la partita
+        
+        propagateGamePhrase(); //propaga il messaggio tra tutti i giocatori
 
-    setSospesa(&stanza_corrente, &mutex_stato);
-    addAllPlayersWaiting();
-    riprendiChat();
+        setSospesa(&stanza_corrente, &mutex_stato);
+        addAllPlayersWaiting();
+        riprendiChat();
+    }
 }
 
 
@@ -156,7 +157,7 @@ void propagateGamePhrase(){
                 // Nessun giocatore aggiunto dalla coda
                 remaining_players--; 
 
-                if(next_temp != NULL) last_user = in_esame;
+                last_user = in_esame;
                 in_esame = next_temp;
             }
         }
@@ -188,10 +189,10 @@ void propagateGamePhrase(){
                 rimuoviGiocatore(in_esame);
                 remaining_players--;
 
-                if(next_temp != NULL) last_user = in_esame;
+                last_user = in_esame;
                 in_esame = next_temp;
             }
-            else if (!riceviRispostaConTimeout(user_socket, user_contribute, GAME_PHRASE_MAX_SIZE, 30)) {
+            else if (!riceviRispostaConTimeout(user_socket, user_contribute, GAME_PHRASE_MAX_SIZE, 120)) {
                 // Timeout o errore di ricezione
                 printf("Timeout o errore per il giocatore %s, passo al prossimo\n", in_esame->nome);
                 
@@ -209,7 +210,7 @@ void propagateGamePhrase(){
 
                 rimuoviGiocatore(in_esame);
                 
-                if(next_temp != NULL) last_user = in_esame;
+                last_user = in_esame;
                 in_esame = next_temp;
                 printf("il nome del prossimo utente è %s\n\n",in_esame->nome);
                 printList();
@@ -225,7 +226,7 @@ void propagateGamePhrase(){
                 strcpy(user_contribute, "");
                 
                 // Passa al prossimo giocatore
-                if(next_temp != NULL) last_user = in_esame;
+                last_user = in_esame;
                 in_esame = next_temp;
             
                 i++; // Incrementa solo se un giocatore ha risposto con successo
@@ -244,6 +245,7 @@ void propagateGamePhrase(){
     // Se c'è almeno una frase, fai il broadcast
     if (strlen(phrase) > 0) {
         //broadcast(NULL, phrase);
+        printf("lingua %s\n", last_user->lingua);
         broadcastTraduzione(NULL,phrase,last_user);
     }
     else {

@@ -176,6 +176,12 @@ char* controlloRichiestaUtente(const char *input, Utente * utente, int * new_soc
 
             inserisciStanza(listStanze,tmp);
 
+            char send_port[10];
+            sprintf(send_port, "%hu", tmp->port);
+
+            send(*new_socket, send_port, sizeof(send_port), 0);
+
+
             response = "1";
 
         }
