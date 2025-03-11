@@ -116,7 +116,15 @@ void * Thread_ChatParty(void *args){
 
     char bufferPartita[BUFFER_SIZE];
     while(1){
-        riceviRisposta(socket_partita,bufferPartita, BUFFER_SIZE);
+        int ris = riceviRispostaConTimeout(socket_partita,bufferPartita, BUFFER_SIZE,120);
+        printf("%s\n",bufferPartita);
+
+        if(!ris){
+            close(socket_partita);
+            break;
+        }
+
+        //riceviRisposta(socket_partita,bufferPartita,BUFFER_SIZE);
     }
 
     

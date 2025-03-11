@@ -10,7 +10,7 @@
 #include <curl/curl.h>
 #include <jansson.h>
 
-//ROBA SPERIMENTALE
+
 #include <errno.h>
 #include <sys/socket.h>
 #include <poll.h>
@@ -54,11 +54,8 @@ void chatPause();
 
 void rimuoviGiocatore(Utente * utente);
 
-int riceviRispostaConTimeout(int socket, char *buffer, size_t size, int timeout_seconds);
 
 void propagateGamePhrase();
-
-int isSocketConnected();
 
 void addAllPlayersWaiting();
 void riprendiChat();

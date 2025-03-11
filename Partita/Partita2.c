@@ -281,26 +281,7 @@ void printList(){
     printf("\n\n---LISTA--- %s\n\n",lista);
 }
 
-int isSocketConnected(int sock){
-    char buff[1];
-    int result = recv(sock, buff, 1, MSG_PEEK | MSG_DONTWAIT);
-    
-    if (result == 0) {
-        // La connessione è stata chiusa correttamente
-        return 0;
-    } else if (result < 0) {
-        // Controlla se è un errore temporaneo
-        if (errno == EAGAIN || errno == EWOULDBLOCK) {
-            // Non ci sono dati ma la connessione è viva
-            return 1;
-        } else {
-            // Errore di connessione
-            return 0;
-        }
-    }
-    // Ci sono dati da leggere, la connessione è attiva
-    return 1;
-}
+
 
 
 void SpostaPropretario(Utente * utente){
@@ -425,51 +406,6 @@ void rimuoviGiocatore(Utente * utente){
     pthread_mutex_unlock(&(stanza_corrente.light));
 }
 
-int riceviRispostaConTimeout(int socket, char *buffer, size_t size, int timeout_seconds) {
-   
-    time_t start_time = time(NULL);
-    struct pollfd fd;
-    fd.fd = socket;
-    fd.events = POLLIN;
-    
-    // Buffer per i controlli periodici
-    char check_buffer[1];
-    
-    // Loop fino al timeout totale
-    while (time(NULL) - start_time < timeout_seconds) {
-        // Poll con un timeout breve (es. 2 secondi)
-        int ret = poll(&fd, 1, 2000);
-        
-        if (ret < 0) {
-            // Errore nella poll
-            return 0;
-        } 
-        else if (ret == 0) {
-            // Nessun dato disponibile, verifica se il socket è ancora connesso
-            if (!isSocketConnected(socket)) {
-                // Il client si è disconnesso
-                return 0;
-            }
-            // Altrimenti continua ad aspettare
-            continue;
-        }
-        
-        // Ci sono dati da leggere
-        if (fd.revents & POLLIN) {
-            ssize_t bytes = recv(socket, buffer, size - 1, 0);
-            if (bytes <= 0) {
-                // Il client si è disconnesso
-                return 0;
-            }
-            buffer[bytes] = '\0';
-            return 1; // Successo
-        }
-    }
-    
-    // Timeout raggiunto
-    return 0;
-    
-}
 
 void * Thread_GestioneNuovaConnessione(void *args){
 
