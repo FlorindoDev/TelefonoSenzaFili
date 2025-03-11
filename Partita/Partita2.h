@@ -42,6 +42,8 @@ void addPlayer(Utente *);
 
 void addNameToMessage(char *, Utente *);
 
+void SpostaPropretario(Utente *);
+
 void timerHomeMade(int, int);
 
 void * thread_Game(void *);

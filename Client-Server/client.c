@@ -240,26 +240,24 @@ void homeShow(){
                     printf("ERRORE : creazione stanza di gioco fallita");
                 }else{
                     printf("SUCCESSO : creazione stanza di gioco creata con successo");
-                    char * f = riceviRisposta(sock, buffer, BUFFER_SIZE);
 
-                    // Rimuovi spazi, caratteri di nuova riga, ecc.
-                    char cleanStr[BUFFER_SIZE];
-                    int j = 0;
-                    for (int i = 0; i < strlen(f); i++) {
-                        if (f[i] >= '0' && f[i] <= '9') {
-                            cleanStr[j++] = f[i];
-                        }
+                    risultato = atoi(riceviRisposta(sock, buffer, BUFFER_SIZE));
+                    stanza.port = (unsigned short int)risultato;
+    
+                    if(risultato == -1){
+                        chiudiSocket(sock);
+                        printf("ERRORE : creazione stanza di gioco fallita\n");
+                        
+                    }else{
+
+                        printf("%hu\n", stanza.port);
+                        chiudiSocket(sock);
+                        connessionePartita();
+                        chatParty();
+
                     }
-                    cleanStr[j] = '\0';  // Aggiungi terminatore di stringa
-
-                    printf("Stringa originale: '%s'\n", f);
-                    printf("Stringa pulita: '%s'\n", cleanStr);
-
-                    stanza.port = (unsigned short int)atoi(cleanStr);
-                    printf("%hu\n", stanza.port);
-                    chiudiSocket(sock);
-                    sleep(2);
-                    //connessionePartita();
+                    
+            
 
                 }
 
@@ -428,12 +426,12 @@ int creaStanzaGioco(){
         mandaMessaggio(sock, message);
        
         // Riceve la risposta dal server
-        riceviRisposta(sock,buffer, BUFFER_SIZE );
+        //riceviRisposta(sock,buffer, BUFFER_SIZE );
         
         //chiudiSocket(sock);
         
     
-        return strcmp("-1",buffer) ? 1 : -1;
+        return 1;
 
     }
     

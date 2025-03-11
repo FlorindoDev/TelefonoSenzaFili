@@ -120,6 +120,16 @@ void Game(){
 void propagateGamePhrase(){
 
     printList();
+
+    if(stanza_corrente.direzione == DESC){
+        printf("rimuovo negro\n");
+        SpostaPropretario(&(stanza_corrente.proprietario));
+        printf("%s\n", stanza_corrente.proprietario.nome);
+        
+    }
+
+    printList();
+    
     
     Utente *in_esame = (stanza_corrente.direzione == ASC) ? stanza_corrente.listaPartecipanti : stanza_corrente.coda;
     char phrase[GAME_PHRASE_MAX_SIZE] = "";
@@ -131,7 +141,7 @@ void propagateGamePhrase(){
     int i = 0;
 
     printf("Direzione della stanza: %s\n",(stanza_corrente.direzione == ASC) ? "ASC" : "DESC");
-    
+
     while (i < remaining_players && in_esame != NULL) {
         printf("\niterazione numero %d reamining_players: %d\n",i,remaining_players);
         int user_socket = getUserSocket(in_esame);
@@ -290,6 +300,67 @@ int isSocketConnected(int sock){
     }
     // Ci sono dati da leggere, la connessione è attiva
     return 1;
+}
+
+
+void SpostaPropretario(Utente * utente){
+    pthread_mutex_lock(&(stanza_corrente.light));
+
+    Utente *in_esame=stanza_corrente.listaPartecipanti;
+    Utente *prev=NULL;
+
+    while(in_esame!=NULL){
+        if(strcmp(in_esame->nome,utente->nome)==0){ //trovato
+            printf("sono dentro\n");
+
+            if(in_esame->prev==NULL){ //se sono la testa
+                if(in_esame->next==NULL){ //e sono anche la coda
+                    in_esame=NULL;
+                    stanza_corrente.listaPartecipanti=NULL;
+                    stanza_corrente.coda=NULL;
+                    //ero l'ultimo giocatore rimasto quindi termina il gioco
+                }else{
+                    printf("sono testa\n");
+                    //sono solo la testa quindi prendi il prossimo e fallo diventare la testa
+                    Utente *next=in_esame->next;
+                    next->prev=NULL;
+                    in_esame=NULL;
+                    stanza_corrente.listaPartecipanti=next;
+                    printf("fine\n");
+                    
+
+                }
+            }else{
+
+                if(in_esame->next==NULL){ 
+                    //se sono la coda prendi il mio precedente e imposta la coda 
+                    prev->next=NULL;
+                    stanza_corrente.coda=prev;
+
+                }else{
+
+                    //sto in mezzo e devo fare i collegamenti giusti
+                    prev->next=in_esame->next;
+                    in_esame->next->prev=prev;
+
+                }
+            }
+
+            stanza_corrente.num_players--;
+            pthread_mutex_unlock(&(stanza_corrente.light));
+            insertAtBackSafe(&stanza_corrente,utente);
+            return;
+        }
+        printf("fine3\n");
+        prev=in_esame;
+        printf("fine2\n");
+        in_esame=in_esame->next; //vai avanti di uno step
+        printf("fine10\n");
+
+    }
+    printf("fine4\n");
+
+    pthread_mutex_unlock(&(stanza_corrente.light));
 }
 
 void rimuoviGiocatore(Utente * utente){
@@ -471,6 +542,13 @@ void riprendiChat(){
 
 void addPlayer(Utente * utente){
 
+    if(strcmp(stanza_corrente.proprietario.nome,utente->nome)==0){
+        stanza_corrente.proprietario.socket=utente->socket;
+        printf("|%d|\n", stanza_corrente.proprietario.socket);
+        stanza_corrente.proprietario.prev=NULL;
+        stanza_corrente.proprietario.next=NULL;
+    }
+
     //se la partita è già iniziata cambia dinamicamente il modo di inserimento
     if(getStato(&stanza_corrente, &mutex_stato) == INIZIATA){
         insertInGame(&stanza_corrente,utente);
@@ -496,8 +574,15 @@ void enterInChat(int * socket, char * buffer, Utente * utente){
     struct pollfd fds[1];
     fds[0].fd = *socket;
     fds[0].events = POLLIN;  // Monitoriamo la possibilità di lettura
+    
 
     char message[BUFFER_SIZE] = "";
+
+    strcat(message,utente->nome);
+    strcat(message," joined in the chat");
+    broadcast(socket,message);
+
+    strcpy(message,"");
 
     while (getStato(&stanza_corrente,&mutex_stato) != INIZIATA) {
         int ret = poll(fds, 1, TIMEOUT);
@@ -653,7 +738,7 @@ char* Traduzione(char* s, Utente* u1, Utente* u2){
         // Impostare i dati da inviare (equivalente a -d "q=cane&source=it&target=en")
         
         
-        snprintf(post_data, sizeof(post_data), "q=%s&source=%s&target=%s", s, u1->lingua, u2->lingua);
+        snprintf(post_data, sizeof(post_data), "q=%s&source=%s&target=%s&alternatives=0", s, u1->lingua, u2->lingua);
        
         // Specificare i dati da inviare tramite POST
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data);
