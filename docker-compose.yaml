@@ -1,0 +1,36 @@
+services:
+  server:
+    image: telefono:1.0.0
+    container_name: telefono
+    networks:
+      dieti-net-lso:
+        ipv4_address: 192.168.92.22
+
+
+  client:
+    image: telefonoclient:1.0.0
+    container_name: telefonoclient
+    networks:
+      dieti-net-lso:
+        ipv4_address: 192.168.92.21
+    build: .
+    stdin_open: true  # Mantiene aperto lo standard input
+    tty: true 
+
+  client2:
+    image: telefonoclient:1.0.0
+    container_name: telefonoclient2
+    networks:
+      dieti-net-lso:
+        ipv4_address: 192.168.92.23
+    build: .
+    stdin_open: true  # Mantiene aperto lo standard input
+    tty: true 
+
+
+networks:
+  dieti-net-lso:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: "192.168.92.0/24"

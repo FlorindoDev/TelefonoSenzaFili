@@ -127,6 +127,7 @@ void * Thread_ChatParty(void *args){
         //riceviRisposta(socket_partita,bufferPartita,BUFFER_SIZE);
     }
 
+    pthread_exit(NULL);
     
 
 }
@@ -145,7 +146,7 @@ int login(){
     char message[BUFFER_SIZE];
     creaComando(message,"login");
 
-    sock = creaSocket(&serv_addrr_g,PORT);
+    sock = creaSocket(&serv_addrr_g,PORT,"192.168.92.22");
 
     if(sock != -1){
         
@@ -185,7 +186,7 @@ int signUp(){
     char message[BUFFER_SIZE];
     creaComando(message,"singup");
 
-    sock = creaSocket(&serv_addrr_g,PORT);
+    sock = creaSocket(&serv_addrr_g,PORT, "192.168.92.22");
     
     if (sock != -1){
 
@@ -258,7 +259,7 @@ void homeShow(){
                         
                     }else{
 
-                        printf("%hu\n", stanza.port);
+                       
                         chiudiSocket(sock);
                         connessionePartita();
                         chatParty();
@@ -289,7 +290,7 @@ int mostraStanzaGioco(){
     char message[BUFFER_SIZE];
     creaComando(message,"show");
 
-    sock = creaSocket(&serv_addrr_g,PORT);
+    sock = creaSocket(&serv_addrr_g,PORT,"192.168.92.22");
 
     if(sock != -1){
         
@@ -338,7 +339,7 @@ int entraStanzaGioco(){
     char message[BUFFER_SIZE];
     creaComando(message,"join");
 
-    socket_partita = creaSocket(&serv_addrr_g,stanza.port);
+    socket_partita = creaSocket(&serv_addrr_g,stanza.port,"192.168.92.22");
 
 
 
@@ -377,7 +378,7 @@ int connessionePartita(){
     char message[BUFFER_SIZE];
     creaComando(message,"join");
 
-    socket_partita = creaSocket(&serv_addrr_g,stanza.port);
+    socket_partita = creaSocket(&serv_addrr_g,stanza.port, "192.168.92.22");
     printf("socket1: %d\n", socket_partita);
 
     if(socket_partita != -1){
@@ -431,7 +432,7 @@ int creaStanzaGioco(){
     char message[BUFFER_SIZE];
     creaComando(message,"create");
 
-    sock = creaSocket(&serv_addrr_g,PORT);
+    sock = creaSocket(&serv_addrr_g,PORT,"192.168.92.22");
 
     if(sock != -1){
         
@@ -483,7 +484,7 @@ int chatParty(){
 
     
     
-    printf("\nSEI IN CHAT COGLIONE:\n");
+    printf("\n=== SEI IN CHAT ===\n");
     
 
     char message[BUFFER_SIZE];
@@ -495,8 +496,6 @@ int chatParty(){
     
         char c;
         while ((c = getchar()) != '\n' && c != EOF);
-
-        printf("socket2: %d\n", socket_partita);
         
         strcpy(message,"");
         scanf("%[^\n]",message);

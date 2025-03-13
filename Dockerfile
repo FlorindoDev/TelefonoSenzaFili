@@ -29,5 +29,6 @@ WORKDIR /usr/src/app
 # Copia i file del progetto nella directory di lavoro (opzionale)
 COPY . .
 
-# Comando di default (opzionale, può essere sovrascritto)
-CMD ["bash"]
+RUN make clean && make
+
+CMD ["./my_program"]

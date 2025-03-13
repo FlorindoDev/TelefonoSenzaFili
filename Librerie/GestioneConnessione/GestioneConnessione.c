@@ -1,6 +1,6 @@
 
 
-int creaSocket(struct sockaddr_in * server_addr, int port){
+int creaSocket(struct sockaddr_in * server_addr, int port, char * indirizzo){
     int socket_r;
     // Creazione della socket
     if ((socket_r = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
@@ -14,7 +14,7 @@ int creaSocket(struct sockaddr_in * server_addr, int port){
     memset(server_addr, 0, sizeof(*server_addr));
     server_addr->sin_family = AF_INET;
     server_addr->sin_port = htons(port);
-    server_addr->sin_addr.s_addr = inet_addr("127.0.0.1");
+    server_addr->sin_addr.s_addr = inet_addr(indirizzo);
     
     // Connessione al server
     if ((connect(socket_r, (struct sockaddr*)server_addr,sizeof(*server_addr))) < 0) {
@@ -81,7 +81,7 @@ char* riceviRisposta(int socket, char * buffer, int grandezza_buffer){
     if (charPassati < grandezza_buffer){
         buffer[charPassati]='\0';
     }
-    printf("Risposta Server: %s\n", buffer);
+    printf("%s\n", buffer);
     return buffer;
 }
 
@@ -91,7 +91,6 @@ void mandaMessaggio(int socket, char * message){
 
     // Invia il messaggio al server
     send(socket, message, strlen(message), 0);
-    printf("Mando: %s\n", message);
     
 
 }

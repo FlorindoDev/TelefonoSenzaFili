@@ -8,7 +8,7 @@
 #define EXIT_MESSAGE "c0886be5e66f118ea41bd90727881825"
 
 //Funzioni per gestione socket
-int creaSocket(struct sockaddr_in *, int);
+int creaSocket(struct sockaddr_in *, int, char *);
 int chiudiSocket(int);
 char* riceviRisposta(int,char*, int);
 void mandaMessaggio(int, char*);

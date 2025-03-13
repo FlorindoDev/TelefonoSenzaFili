@@ -119,17 +119,14 @@ void Game(){
 
 void propagateGamePhrase(){
 
-    printList();
+
 
     if(stanza_corrente.direzione == DESC){
-        printf("rimuovo negro\n");
         SpostaPropretario(&(stanza_corrente.proprietario));
-        printf("%s\n", stanza_corrente.proprietario.nome);
         
     }
     sleep(1);
 
-    printList();
     
     
     Utente *in_esame = (stanza_corrente.direzione == ASC) ? stanza_corrente.listaPartecipanti : stanza_corrente.coda;
@@ -223,14 +220,12 @@ void propagateGamePhrase(){
                 
                 last_user = in_esame;
                 in_esame = next_temp;
-                printf("il nome del prossimo utente è %s\n\n",in_esame->nome);
-                printList();
             }
             else {
 
                 Utente *next_temp = getNextInOrder(in_esame, stanza_corrente.direzione);
                 // Risposta ricevuta con successo
-                printf("Risposta ricevuta con successo dal giocatore %s: '%s'\n", in_esame->nome, user_contribute);
+               
                 strcat(phrase, " ");
                 strcat(phrase, user_contribute); 
                 strcpy(phrase,Traduzione(phrase,in_esame,next_temp));
@@ -244,14 +239,12 @@ void propagateGamePhrase(){
             }
         }
         
-        printList();
+
     }
     
     // Aggiorna il numero di giocatori nella stanza
     stanza_corrente.num_players = remaining_players;
 
-    printf("ALLA FINE DEL GIOCO LA LISTA è:\n");
-    printList();
     
     // Se c'è almeno una frase, fai il broadcast
     if (strlen(phrase) > 0) {
@@ -293,7 +286,7 @@ void SpostaPropretario(Utente * utente){
 
     while(in_esame!=NULL){
         if(strcmp(in_esame->nome,utente->nome)==0){ //trovato
-            printf("sono dentro\n");
+
 
             if(in_esame->prev==NULL){ //se sono la testa
                 if(in_esame->next==NULL){ //e sono anche la coda
@@ -302,13 +295,13 @@ void SpostaPropretario(Utente * utente){
                     stanza_corrente.coda=NULL;
                     //ero l'ultimo giocatore rimasto quindi termina il gioco
                 }else{
-                    printf("sono testa\n");
+
                     //sono solo la testa quindi prendi il prossimo e fallo diventare la testa
                     Utente *next=in_esame->next;
                     next->prev=NULL;
                     in_esame=NULL;
                     stanza_corrente.listaPartecipanti=next;
-                    printf("fine\n");
+
                     
 
                 }
@@ -333,14 +326,13 @@ void SpostaPropretario(Utente * utente){
             insertAtBackSafe(&stanza_corrente,utente);
             return;
         }
-        printf("fine3\n");
         prev=in_esame;
-        printf("fine2\n");
+
         in_esame=in_esame->next; //vai avanti di uno step
-        printf("fine10\n");
+
 
     }
-    printf("fine4\n");
+
 
     pthread_mutex_unlock(&(stanza_corrente.light));
 }
@@ -393,7 +385,6 @@ void rimuoviGiocatore(Utente * utente){
                 close(user_socket);
             }
             
-            printf("giocatore eliminato num: %d\n",stanza_corrente.num_players);
             pthread_mutex_unlock(&(stanza_corrente.light));  // Sblocca prima di uscire
             return;
 
@@ -481,7 +472,6 @@ void addPlayer(Utente * utente){
 
     if(strcmp(stanza_corrente.proprietario.nome,utente->nome)==0 && stanza_corrente.direzione == DESC){
         stanza_corrente.proprietario.socket=utente->socket;
-        printf("|%d|\n", stanza_corrente.proprietario.socket);
         stanza_corrente.proprietario.prev=NULL;
         stanza_corrente.proprietario.next=NULL;
     }
@@ -547,7 +537,6 @@ void enterInChat(int * socket, char * buffer, Utente * utente){
             strcpy(message, "");
             addNameToMessage(message, utente);
             strcat(message, buffer);
-            printf("stringa broadcast: %s", buffer);
             broadcast(socket, message);
         }
     }
@@ -561,9 +550,7 @@ void broadcastTraduzione(int * sender_socket, char * sender_messagge,Utente * la
     Utente * in_esame = stanza_corrente.listaPartecipanti;
     char tmp_parola_brodcast[BUFFER_SIZE] = "";
     strcpy(tmp_parola_brodcast,sender_messagge);
-    printf("prima del for\n");
     for(int i=0;i<stanza_corrente.num_players;i++){
-        printf("nel for read\n");
         int user_socket = getUserSocket(in_esame);
         if(user_socket == -1)continue;
         if(sender_socket != NULL){
@@ -579,7 +566,6 @@ void broadcastTraduzione(int * sender_socket, char * sender_messagge,Utente * la
         in_esame = getNext(in_esame);
         
     }
-    printf("fine for read\n");
     pthread_mutex_unlock(&(stanza_corrente.light));
 }
 
@@ -612,7 +598,6 @@ void ChooseAction(int * socket, char * buffer, Utente * utente){
 
     if(getStato(&stanza_corrente, &mutex_stato) == INIZIATA){
         entroInAttesa();
-        printf("sono uscito dall attesaaaa utente:%s\n",utente->nome);
     }
     addPlayer(utente);
 
@@ -659,12 +644,8 @@ char* Traduzione(char* s, Utente* u1, Utente* u2){
     char response_data[4096] = "";  // Buffer per memorizzare la risposta del server
 
     // Inizializza la libreria cURL
-    printf("prima della init\n");
-
     curl_global_init(CURL_GLOBAL_DEFAULT);
     curl = curl_easy_init();
-
-    printf("dopo init\n");
 
     if(curl) {
 
@@ -698,7 +679,6 @@ char* Traduzione(char* s, Utente* u1, Utente* u2){
             fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
         } else {
             // Stampa la risposta ricevuta
-            printf("Response data: %s\n", response_data);
 
             json_error_t error;
             json_t *root = json_loads(response_data, 0, &error);
@@ -709,7 +689,6 @@ char* Traduzione(char* s, Utente* u1, Utente* u2){
 
             if (json_is_string(translatedText)) {
                 // Stampa del valore
-                printf("Il valore di translatedText è: %s\n", json_string_value(translatedText));
                 strcpy(tmp, json_string_value(translatedText));
             } else {
                 printf("L'oggetto 'translatedText' non è una stringa\n");

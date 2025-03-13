@@ -1,0 +1,32 @@
+# Usa Ubuntu come base
+FROM ubuntu:20.04
+
+
+# Aggiorna il sistema e installa i pacchetti necessari
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && \
+    apt-get install -y \
+      build-essential \
+      gcc \
+      make \
+      postgresql-client \
+      libpq-dev \
+      valgrind \
+      curl \
+      libcurl4-openssl-dev \
+      libjansson-dev \
+      tzdata && \
+    ln -fs /usr/share/zoneinfo/Europe/Rome /etc/localtime && \
+    dpkg-reconfigure -f noninteractive tzdata && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Imposta una directory di lavoro
+WORKDIR /usr/src/app
+
+# Copia i file del progetto nella directory di lavoro (opzionale)
+COPY . .
+
+RUN make clean && make
+
+CMD ["/bin/bash"]
