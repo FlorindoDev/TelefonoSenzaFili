@@ -100,7 +100,7 @@ void * thread_Game(void *args){
 
 void Game(){
     while(stanza_corrente.num_players >= MIN_PLAYER){
-        timerHomeMade(5,2);
+        timerHomeMade(60,5);
         //Logica del gioco
         setIniziata(&stanza_corrente, &mutex_stato);
         printf("Gioco in corso\n");
@@ -127,6 +127,7 @@ void propagateGamePhrase(){
         printf("%s\n", stanza_corrente.proprietario.nome);
         
     }
+    sleep(1);
 
     printList();
     
@@ -478,7 +479,7 @@ void riprendiChat(){
 
 void addPlayer(Utente * utente){
 
-    if(strcmp(stanza_corrente.proprietario.nome,utente->nome)==0){
+    if(strcmp(stanza_corrente.proprietario.nome,utente->nome)==0 && stanza_corrente.direzione == DESC){
         stanza_corrente.proprietario.socket=utente->socket;
         printf("|%d|\n", stanza_corrente.proprietario.socket);
         stanza_corrente.proprietario.prev=NULL;

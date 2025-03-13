@@ -115,15 +115,16 @@ void DisconnectedHandler(int input){
 void * Thread_ChatParty(void *args){
 
     char bufferPartita[BUFFER_SIZE];
+    sleep(2);
     while(1){
-        //int ris = riceviRispostaConTimeout(socket_partita,bufferPartita, BUFFER_SIZE,120);
-        //printf("%s\n",bufferPartita);
+        /**/ int ris = riceviRispostaConTimeout(socket_partita,bufferPartita, BUFFER_SIZE,120);
+        printf("%s\n",bufferPartita);
 
-        //if(!ris){
-            //close(socket_partita);
-            //break;
-        //}
-        riceviRisposta(socket_partita,bufferPartita,BUFFER_SIZE);
+        if(!ris){
+            close(socket_partita);
+            break;
+        }
+        //riceviRisposta(socket_partita,bufferPartita,BUFFER_SIZE);
     }
 
     
@@ -333,21 +334,26 @@ int entraStanzaGioco(){
     
     scanf("%hu", &(stanza.port));
     
-    pthread_t thread;
-    if (pthread_create(&thread, NULL, Thread_ChatParty,NULL) != 0) {
-        perror("Errore nella creazione del thread");
-        return -1;
-    }
-    pthread_detach(thread);
-    
 
     char message[BUFFER_SIZE];
     creaComando(message,"join");
 
     socket_partita = creaSocket(&serv_addrr_g,stanza.port);
+
+
+
+    
+
     printf("socket1: %d\n", socket_partita);
 
     if(socket_partita != -1){
+
+        pthread_t thread;
+        if (pthread_create(&thread, NULL, Thread_ChatParty,NULL) != 0) {
+            perror("Errore nella creazione del thread");
+            return -1;
+        }
+        pthread_detach(thread);
         
         // Invia il messaggio al server
         mandaMessaggio(sock,message);
@@ -484,7 +490,7 @@ int chatParty(){
     char bufferChatRicezione[BUFFER_SIZE];
     creaComando(message,"chat");
 
-    while(1){
+    while(isSocketConnected(socket_partita)){
 
     
         char c;
