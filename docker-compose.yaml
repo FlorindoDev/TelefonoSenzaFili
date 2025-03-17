@@ -13,9 +13,8 @@ services:
     networks:
       dieti-net-lso:
         ipv4_address: 192.168.92.21
-    build: .
     stdin_open: true  # Mantiene aperto lo standard input
-    tty: true 
+    tty: true # Assegna un terminale virtuale al container.
 
   client2:
     image: telefonoclient:1.0.0
@@ -23,10 +22,55 @@ services:
     networks:
       dieti-net-lso:
         ipv4_address: 192.168.92.23
-    build: .
     stdin_open: true  # Mantiene aperto lo standard input
-    tty: true 
+    tty: true  # Assegna un terminale virtuale al container.
+  
+  client3:
+    image: telefonoclient:1.0.0
+    container_name: telefonoclient3
+    networks:
+      dieti-net-lso:
+        ipv4_address: 192.168.92.24
+    stdin_open: true  # Mantiene aperto lo standard input
+    tty: true # Assegna un terminale virtuale al container.
 
+  client4:
+    image: telefonoclient:1.0.0
+    container_name: telefonoclient4
+    networks:
+      dieti-net-lso:
+        ipv4_address: 192.168.92.25
+    stdin_open: true  # Mantiene aperto lo standard input
+    tty: true # Assegna un terminale virtuale al container.
+
+  libretranslate:
+    image: libretranslate
+    container_name: libretranslate
+    networks:
+      dieti-net-lso:
+        ipv4_address: 192.168.92.26
+    stdin_open: true  # Mantiene aperto lo standard input
+    tty: true # Assegna un terminale virtuale al container.
+    environment:
+      - LT_LOAD_ONLY=en,it,fr,es
+    ports:
+      - "5000:5000"
+
+  postgresql:
+    image: postgres
+    container_name: db
+    networks:
+      dieti-net-lso:
+        ipv4_address: 192.168.92.27
+    environment:
+      POSTGRES_USER: db     # Nome utente personalizzato
+      POSTGRES_PASSWORD: db  # Password personalizzata
+      POSTGRES_DB: mydatabase   # Nome database pre-creato
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # Persistenza dati
+      - ./initdb:/docker-entrypoint-initdb.d
 
 networks:
   dieti-net-lso:
@@ -34,3 +78,7 @@ networks:
     ipam:
       config:
         - subnet: "192.168.92.0/24"
+
+
+volumes:
+  postgres_data:

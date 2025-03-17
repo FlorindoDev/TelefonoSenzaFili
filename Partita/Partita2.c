@@ -182,7 +182,7 @@ void propagateGamePhrase(){
                 }
             }
             
-            send_result2 = send(user_socket, "\nè il tuo turno:\n", strlen("\nè il tuo turno:\n"), 0);
+            send_result2 = send(user_socket, "\nè il tuo turno:\n", strlen("\n↑Qui sopra la frase finora↑ \n è il tuo turno:\n"), 0);
             if (send_result2 < 0) {
                 printf("Errore nell'invio del messaggio di turno al giocatore %s: %s\n", in_esame->nome, strerror(errno));
             }
@@ -651,7 +651,7 @@ char* Traduzione(char* s, Utente* u1, Utente* u2){
 
         
         // Impostare l'URL di destinazione
-        curl_easy_setopt(curl, CURLOPT_URL, "http://192.168.0.149:5000/translate");
+        curl_easy_setopt(curl, CURLOPT_URL, "http://192.168.92.26:5000/translate");
         
         // Impostare i dati da inviare (equivalente a -d "q=cane&source=it&target=en")
         

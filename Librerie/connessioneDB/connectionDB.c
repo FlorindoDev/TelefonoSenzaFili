@@ -1,6 +1,6 @@
 
 PGconn* connect_to_DB(){
-    const char *conninfo = "host=ep-restless-voice-a48pi7t3.us-east-1.aws.neon.tech port=5432 dbname=neondb user=neondb_owner password=npg_rqCn8eUhMx1H sslmode=require options=endpoint=ep-restless-voice-a48pi7t3";
+    const char *conninfo = "host=192.168.92.27 port=5432 dbname=mydatabase user=db password=db";
     PGconn* conn = PQconnectdb(conninfo);
 
      if (PQstatus(conn) != CONNECTION_OK) {

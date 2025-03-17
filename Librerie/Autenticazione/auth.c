@@ -2,7 +2,7 @@
 int login(PGconn* conn,Utente* utente, char * ling){
     
     char query[512];
-    snprintf(query, sizeof(query), "SELECT * FROM Utente WHERE nome = '%s' AND Password_Utente = '%s'", utente->nome, utente->password);
+    snprintf(query, sizeof(query), "SELECT * FROM utente WHERE nome = '%s' AND password_utente = '%s'", utente->nome, utente->password);
 
     PGresult *res = PQexec(conn, query);
 
