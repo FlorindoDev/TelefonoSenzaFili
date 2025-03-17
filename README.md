@@ -1,5 +1,4 @@
 # Documentazione
-![Documentazione TelefonoSenzaFili](https://github.com/FlorindoDev/TelefonoSenzaFili/blob/master/Doc%20LSO.pdf)
 <a target="_blanck" herf="https://github.com/FlorindoDev/TelefonoSenzaFili/blob/master/Doc%20LSO.pdf">Documentazione TelefonoSenzaFili<\a>
 
 # SetUp
