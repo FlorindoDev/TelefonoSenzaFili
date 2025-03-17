@@ -1,9 +1,13 @@
 # This code 
 ![This Code](https://i.pinimg.com/originals/98/fd/c7/98fdc7205a7209d34d95cdd5bce345c5.gif)
 
+# Documentazione
+![Documentazione TelefonoSenzaFili](https://github.com/FlorindoDev/TelefonoSenzaFili/blob/master/Doc%20LSO.pdf)
+
 # Fonti
 - libpq eseguire quary: https://www.postgresql.org/docs/9.4/libpq-exec.html
 - libpq Creare connessione: https://www.postgresql.org/docs/9.4/libpq-exec.html](https://www.postgresql.org/docs/9.4/libpq-connect.html#LIBPQ-CONNSTRING
+- traduzione: https://libretranslate.com/
 
 
 # Per compilare
@@ -17,7 +21,5 @@
 # Per scaricare pg
 - `sudo apt-get install --reinstall libpq-dev`
 
-# Schema Database
-![Schema Concettuale Database](https://github.com/FlorindoDev/TelefonoSenzaFili/blob/master/Database%20LSO.jpg)
 
 
