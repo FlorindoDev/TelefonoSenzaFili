@@ -20,4 +20,7 @@
 # Schema Database
 ![Schema Concettuale Database](https://github.com/FlorindoDev/TelefonoSenzaFili/blob/master/Database%20LSO.jpg)
 
+# Documentazione
+![Documentazione TelefonoSenzaFili](https://github.com/FlorindoDev/TelefonoSenzaFili/blob/master/Doc%20LSO.pdf)
+
 
