@@ -10,56 +10,64 @@
 #include <curl/curl.h>
 #include <jansson.h>
 
+
+#include <errno.h>
+#include <sys/socket.h>
+#include <poll.h>
+
+#define TIMEOUT 1000
+
+//FINE
+
 #include "../Librerie/Stanze/Stanze.h"
 #include "../Librerie/ThreadConnessione/ThreadConnessione.h"
 #include "../Librerie/MessageEditor/MessageEditor.h"
 #include "../Librerie/GestioneConnessione/GestioneConnessione.h"
 
-#define MAX_PAROLA 5000
-#define MIN_PLAYER 2
+#define GAME_PHRASE_MAX_SIZE 5000
+#define MIN_PLAYER 4
 
-
-/* mutex e cond per mettere in pasua la chat il gioco e client in coda */
 pthread_cond_t cond_stato = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t mutex_stato = PTHREAD_MUTEX_INITIALIZER;
 
 pthread_cond_t cond_chat = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t mutex_chat = PTHREAD_MUTEX_INITIALIZER;
 
-pthread_cond_t cond_game = PTHREAD_COND_INITIALIZER;
-pthread_mutex_t mutex_game = PTHREAD_MUTEX_INITIALIZER;
 
-pthread_key_t flag_key_game;
+void ChooseAction(int *, char *, Utente *);
 
+void broadcast(int * , char * );
 
-//conteggio di persone che vogliono entrare
-int inCoda=0;
+void addPlayer(Utente *);
 
-//varabbili per la connessione
-int server_fd;
-struct sockaddr_in server_addr;
-socklen_t addr_len = sizeof(server_addr);
-Stanza stanza_corrente;
+void addNameToMessage(char *, Utente *);
 
+void SpostaPropretario(Utente *);
 
-int AperturaSocket();
-void gestioneNuovaConnessione(int *, char *, Utente *, Message);
-char* Traduzione(char*, Utente*, Utente*);
-void broadcastTraduzione(int *, char *, Utente *);
+void timerHomeMade(int, int);
 
+void * thread_Game(void *);
 
 void Game();
-void ThreadKill();
-void timerHomeMade(int , int); //tempo , quante volte 
+
+void chatPause();
+
+void rimuoviGiocatore(Utente * utente);
 
 
-void * Thread_Game(void *args);
+void propagateGamePhrase();
 
+void addAllPlayersWaiting();
+void riprendiChat();
 
-void CloseThread(int);
-void NoCrashHendler(int);
-void HelndlerSetter(struct sigaction *, __sighandler_t,int,int);
+int aggiungiProssimoDallaCoda();
 
+void printList();
 
+char* Traduzione(char* s, Utente* , Utente* );
+
+size_t write_callback(void *ptr, size_t size, size_t nmemb, char *data);
+
+void broadcastTraduzione(int * sender_socket, char * sender_messagge,Utente * last_user);
 
 #endif
