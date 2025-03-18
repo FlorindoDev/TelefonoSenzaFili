@@ -32,48 +32,6 @@ int chiudiSocket(int socket){
     close(socket);
 }
 
-char* riceviRispostaSignal(int socket, char * buffer, int grandezza_buffer){
-
-    int charPassati = read(socket, buffer, grandezza_buffer);
-
-    if (charPassati < grandezza_buffer){
-        buffer[charPassati]='\0';
-    }
-
-
-    if(strcmp(buffer, EXIT_MESSAGE) == 0){
-        buffer="";
-        pthread_kill(pthread_self(),SIGUSR2);
-    }
-
-    return buffer;
-
-}
-
-
-char* riceviRispostaGame(int socket, char * buffer, int grandezza_buffer, pthread_key_t flag_key_game, pthread_t thread_user ){
-
-    int *flag_uscita = (int *)pthread_getspecific(flag_key_game); 
-    int charPassati = read(socket, buffer, grandezza_buffer);
-
-
-    if (charPassati < grandezza_buffer){
-        buffer[charPassati]='\0';
-    }
-
-
-    if(strcmp(buffer, EXIT_MESSAGE) == 0 || *flag_uscita==1){
-        buffer="";
-        *flag_uscita=1;
-        pthread_kill(thread_user,SIGUSR2);
-      
-    }
-
-    return buffer;
-
-}
-
-
 char* riceviRisposta(int socket, char * buffer, int grandezza_buffer){
 
     int charPassati = read(socket, buffer, grandezza_buffer);
@@ -95,14 +53,19 @@ void mandaMessaggio(int socket, char * message){
 
 }
 
+//serve per inviare la lingua al client dopo aver fatto il login
 void sendLingua(int *new_socket, char * ling, char * response){
+
     if(strcmp(response,"1")==0)send(*new_socket, ling, strlen(ling), 0);
         
     else send(*new_socket, "-1", strlen("-1"), 0);
+
 }
 
 int isSocketConnected(int sock){
+
     char buff[1];
+    //MSG_peek legge senza distrugere MSG_DONTWAIT non bloccante
     int result = recv(sock, buff, 1, MSG_PEEK | MSG_DONTWAIT);
     
     if (result == 0) {
@@ -110,6 +73,10 @@ int isSocketConnected(int sock){
         return 0;
     } else if (result < 0) {
         // Controlla se è un errore temporaneo
+        //EAGAIN: Significa che la risorsa richiesta non è attualmente disponibile
+        //EWOULDBLOCK indica che l'operazione avrebbe bloccato il processo se fosse stata eseguita in modalità bloccante, 
+        //quindi in modalità non bloccante viene restituito questo errore.
+
         if (errno == EAGAIN || errno == EWOULDBLOCK) {
             // Non ci sono dati ma la connessione è viva
             return 1;
@@ -126,9 +93,9 @@ int isSocketConnected(int sock){
 int riceviRispostaConTimeout(int socket, char *buffer, size_t size, int timeout_seconds) {
    
     time_t start_time = time(NULL);
-    struct pollfd fd;
-    fd.fd = socket;
-    fd.events = POLLIN;
+    struct pollfd fd; //pollfd è una struttura dove si inserisce il fd per il pollin
+    fd.fd = socket;    
+    fd.events = POLLIN; //evento da fare
     
     // Buffer per i controlli periodici
     char check_buffer[1];
@@ -153,6 +120,8 @@ int riceviRispostaConTimeout(int socket, char *buffer, size_t size, int timeout_
         }
         
         // Ci sono dati da leggere
+        // fd.revents conetiene una sequenza di bit  che indica cosa e successo nel file descriptor
+        // fd.revents & POLLIN controlla se e accaduto un evento POLLIN
         if (fd.revents & POLLIN) {
             ssize_t bytes = recv(socket, buffer, size - 1, 0);
             if (bytes <= 0) {

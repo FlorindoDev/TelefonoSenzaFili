@@ -143,8 +143,6 @@ void setIniziata(Stanza* stanza_corrente, pthread_mutex_t* mutex_stato);
 
 void setSospesa(Stanza* stanza_corrente, pthread_mutex_t* mutex_stato);
 
-Utente* removeUtenteFromThread(Utente*,pthread_t, int, Stanza*);
-
 pid_t creazioneProcessoStanza(int*);
 
 int returnPortaPartita(int*);

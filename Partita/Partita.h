@@ -25,7 +25,7 @@
 #include "../Librerie/GestioneConnessione/GestioneConnessione.h"
 
 #define GAME_PHRASE_MAX_SIZE 5000
-#define MIN_PLAYER 4
+#define MIN_PLAYER 2
 
 pthread_cond_t cond_stato = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t mutex_stato = PTHREAD_MUTEX_INITIALIZER;

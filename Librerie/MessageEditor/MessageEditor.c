@@ -3,11 +3,13 @@
 
 Message dividiStringa(const char *input, char separatore[MAX_SEPRATORE], int dimensione){
 
+    //il messaggio è fatto comando:nome:pass:lingua:nomestanza:direzione
     Message msg;
     char * copia = (char *)malloc(dimensione);
     char *saveptr;
     strncpy(copia, input, dimensione); // Copia la stringa ricevuta per non modificarla direttamente
 
+    //strtok_r thread safe
     char *token = strtok_r(copia, separatore, &saveptr);
     strcpy(msg.funzione,token);
 

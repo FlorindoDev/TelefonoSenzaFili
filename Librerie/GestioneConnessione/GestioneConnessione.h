@@ -12,8 +12,6 @@ int creaSocket(struct sockaddr_in *, int, char *);
 int chiudiSocket(int);
 char* riceviRisposta(int,char*, int);
 void mandaMessaggio(int, char*);
-char* riceviRispostaSignal(int, char *, int /* , pthread_key_t */);
-char* riceviRispostaGame(int socket, char * buffer, int grandezza_buffer ,pthread_key_t, pthread_t );
 void sendLingua(int *, char * , char * );
 int riceviRispostaConTimeout(int , char *, size_t , int );
 

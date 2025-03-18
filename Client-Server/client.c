@@ -16,31 +16,43 @@
 
 #define PORT 8080
 #define BUFFER_SIZE 1024
-#define EXIT_MESSAGE "c0886be5e66f118ea41bd90727881825"
 
 
 //Menu dopo essere loggato
 void homeShow();
 
 //Funzioni richieste dall'utente
+
+//ritorna 1 tutto ok e -1 se falisce
 int login();
+
+//ritorna 1 tutto ok e -1 se falisce
 int signUp();
+
+//ritorna 1 tutto ok e -1 se falisce
 int mostraStanzaGioco();
+
+//ritorna 1 tutto ok e -1 se falisce
 int creaStanzaGioco();
+
+//ritorna 1 tutto ok e -1 se falisce
 int connessionePartita();
+
+//ritorna 1 tutto ok e -1 se falisce
 int entraStanzaGioco();
+
 void * Thread_ChatParty(void *args);
+
+//ritorna 1 tutto ok e -1 se falisce
 int chatParty();
-void DisconnectedHandler(int);
-void * Thread_ChatParty(void *args);
 
 //Funzione creazione del messaggio ben formattato
 void creaComando(char*  , char* );
 
 
 //Variabiili globali per la gestione della socket per la socket
-int sock = -1;
-int socket_partita = -1;
+int sock = -1; //socket generele
+int socket_partita = -1; 
 struct sockaddr_in serv_addrr_g;
 char buffer[BUFFER_SIZE] = {0};
 
@@ -51,13 +63,6 @@ Stanza stanza;
 
 
 int main() {
-
-    /* struct sigaction sa2;
-    sa2.sa_handler = DisconnectedHandler;
-
-    sigemptyset(&sa2.sa_mask);
-    sigaction(SIGINT, &sa2, NULL); */
-
 
     int scelta;
     int risultato;
@@ -106,25 +111,21 @@ int main() {
 }
 
 
-void DisconnectedHandler(int input){
-    char message[BUFFER_SIZE] = EXIT_MESSAGE;
-    //mandaMessaggio(socket_partita, message);
-    exit(0);
-}
-
 void * Thread_ChatParty(void *args){
 
     char bufferPartita[BUFFER_SIZE];
-    sleep(2);
+    sleep(2); //per aspettare la connessione con il server
     while(1){
-        /**/ int ris = riceviRispostaConTimeout(socket_partita,bufferPartita, BUFFER_SIZE,120);
+        
+        //contralla che non sia disconnesso
+        int ris = riceviRispostaConTimeout(socket_partita,bufferPartita, BUFFER_SIZE,120); 
         printf("%s\n",bufferPartita);
 
         if(!ris){
             close(socket_partita);
             break;
         }
-        //riceviRisposta(socket_partita,bufferPartita,BUFFER_SIZE);
+        
     }
 
     pthread_exit(NULL);
@@ -311,6 +312,7 @@ int mostraStanzaGioco(){
     chiudiSocket(sock);
 
     //Inizzializzazione token , se e' -1 esco
+    // il formato è nome_stanza1 codice1:nome_stanza2 codice2
     char *token = strtok(buffer, ":");
     if(strcmp(token,"-1") == 0){
         return -1;
@@ -342,13 +344,9 @@ int entraStanzaGioco(){
     socket_partita = creaSocket(&serv_addrr_g,stanza.port,"192.168.92.22");
 
 
-
-    
-
-    printf("socket1: %d\n", socket_partita);
-
     if(socket_partita != -1){
 
+        //thread per comunciare con la partita
         pthread_t thread;
         if (pthread_create(&thread, NULL, Thread_ChatParty,NULL) != 0) {
             perror("Errore nella creazione del thread");
@@ -367,6 +365,8 @@ int entraStanzaGioco(){
 }
 
 int connessionePartita(){
+
+    //crea thread per comunicare con la partita
     pthread_t thread;
     if (pthread_create(&thread, NULL, Thread_ChatParty,NULL) != 0) {
         perror("Errore nella creazione del thread");
@@ -379,7 +379,7 @@ int connessionePartita(){
     creaComando(message,"join");
 
     socket_partita = creaSocket(&serv_addrr_g,stanza.port, "192.168.92.22");
-    printf("socket1: %d\n", socket_partita);
+
 
     if(socket_partita != -1){
         
@@ -439,11 +439,6 @@ int creaStanzaGioco(){
         // Invia il messaggio al server
         mandaMessaggio(sock, message);
        
-        // Riceve la risposta dal server
-        //riceviRisposta(sock,buffer, BUFFER_SIZE );
-        
-        //chiudiSocket(sock);
-        
     
         return 1;
 
@@ -472,6 +467,7 @@ void creaComando(char* message , char* funzione){
     strcmp(stanza.nomeStanza,"") ? strcat(message,stanza.nomeStanza) : strcat(message," ");
     strcat(message,":");
 
+    //conversione int -> string 
     char dir[10];
     sprintf(dir,"%d",stanza.direzione);
     strcmp(dir,"") ? strcat(message,dir) : strcat(message," ");
@@ -491,6 +487,7 @@ int chatParty(){
     char bufferChatRicezione[BUFFER_SIZE];
     creaComando(message,"chat");
 
+    //finche la socket è aperta
     while(isSocketConnected(socket_partita)){
 
     
@@ -511,7 +508,7 @@ int chatParty(){
     
     
 
-    //chiudiSocket();
+
 
     return -1;
 

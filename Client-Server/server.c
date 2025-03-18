@@ -34,7 +34,7 @@ int mainServer() {
     listStanze=initTesta();
 
 
-    int server_fd;
+    int server_fd; //file decriptor socker server
     struct sockaddr_in address;
     socklen_t addrlen = sizeof(address);
 
@@ -47,7 +47,9 @@ int mainServer() {
 
     // Configurazione dell'indirizzo del server
     address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY;
+
+    //INADDR_ANY = 0.0.0.0 per ascoltare su qualsiasi interfaccia di rete
+    address.sin_addr.s_addr = INADDR_ANY; 
     address.sin_port = htons(PORT);
 
     // Bind della socket all'indirizzo e alla porta
@@ -171,11 +173,12 @@ char* controlloRichiestaUtente(const char *input, Utente * utente, int * new_soc
 
         }else{
 
-
+            //crea il processo figlio e exec e prende la porta del figlio
             initStanza(tmp,utente,msg.nomeStanza,msg.direzione,fd);
 
             inserisciStanza(listStanze,tmp);
 
+            // per far connettere il creatore, la porta deve essere inviata subito
             char send_port[10];
             sprintf(send_port, "%hu", tmp->port);
 

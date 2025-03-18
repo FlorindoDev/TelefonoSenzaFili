@@ -16,7 +16,7 @@ int AperturaSocket();
 int main(int argc, char *argv[]){
 
     // Nel main, prima di altre operazioni:
-    signal(SIGPIPE, SIG_IGN);
+
     
     int pipe_read = atoi(argv[1]);
     int pipe_write = atoi(argv[2]);
@@ -105,9 +105,8 @@ void Game(){
         setIniziata(&stanza_corrente, &mutex_stato);
         printf("Gioco in corso\n");
 
-        //sleep(5);//simulo la partita
         
-        propagateGamePhrase(); //propaga il messaggio tra tutti i giocatori
+        propagateGamePhrase(); //inizia girone
 
         setSospesa(&stanza_corrente, &mutex_stato);
         addAllPlayersWaiting();
@@ -122,17 +121,19 @@ void propagateGamePhrase(){
 
 
     if(stanza_corrente.direzione == DESC){
-        SpostaPropretario(&(stanza_corrente.proprietario));
+        SpostaPropretario(&(stanza_corrente.proprietario)); //al inzio
         
     }
-    sleep(1);
+    sleep(1); //baias del lavoro
 
     
-    
+    //inziamo dalla testa o dalla coda in base alla direzione 
     Utente *in_esame = (stanza_corrente.direzione == ASC) ? stanza_corrente.listaPartecipanti : stanza_corrente.coda;
+
     char phrase[GAME_PHRASE_MAX_SIZE] = "";
     char user_contribute[BUFFER_SIZE] = "";
 
+    //serve per ricordare la lingiua del ultimo giocatore
     Utente * last_user;
     
     int remaining_players = stanza_corrente.num_players;
@@ -188,7 +189,7 @@ void propagateGamePhrase(){
             }
             
             // Controlla se c'è stato un errore in uno dei due invii
-            if ((strlen(phrase) > 0 && send_result1 < 0) || send_result2 < 0) {
+            if ( send_result1 < 0 || send_result2 < 0) {
                 printf("Errore nell'invio dei messaggi al giocatore %s, passo al prossimo\n", in_esame->nome);
                 
                 // Salva un riferimento temporaneo al prossimo giocatore prima di rimuovere in_esame
@@ -512,6 +513,8 @@ void enterInChat(int * socket, char * buffer, Utente * utente){
     strcpy(message,"");
 
     while (getStato(&stanza_corrente,&mutex_stato) != INIZIATA) {
+
+        //ogni secondo controllo se ce scritto qualcosa 
         int ret = poll(fds, 1, TIMEOUT);
 
         if (ret == -1) {
