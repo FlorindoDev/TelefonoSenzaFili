@@ -4,27 +4,29 @@
 # SetUp
 
 ## Primo passo
-Eseguire lo script `ImageBuilder`<br>
-- `ImageBuilder.sh` se si è su un sistma `Unix-like` <br>
-- `ImageBuilder.bat` se su è su `windows` <br>
+Eseguire lo script **ImageBuilder**<br>
+- `ImageBuilder.sh` se si è su un sistema Unix-like<br>
+- `ImageBuilder.bat` se si è su Windows<br>
 
 ## Secondo passo
-- Eseguire il file `docker-compose` con il seguente comando `docker compose up -d` <br>
-- Ovviamente il comando va fatto mentre si è nella direcotry in cui risede il `docker-compose` <br>
+- Eseguire il file `docker-compose` con il seguente comando:
+  ```sh
+  docker compose up -d
+  ```
+- Ovviamente il comando va eseguito nella directory in cui risiede il file `docker-compose`.<br>
 
 ## Terzo passo
-- Entrare nella console di un continer clinet , con il seguente comando `docker exec -it <container_id> /bin/bash` <br>
-- i: mantiene l'input interattivo. <br>
-- t: assegna un terminale pseudo-TTY. <br>
+- Entrare nella console di un container client con il seguente comando:
+  ```sh
+  docker exec -it <container_id> /bin/bash
+  ```
+  - `-i`: mantiene l'input interattivo.<br>
+  - `-t`: assegna un terminale pseudo-TTY.<br>
 
 ## Quarto passo
-- Giocare al gioco <br>
+- Giocare al gioco 🎮<br>
 
 # Fonti
-- libpq eseguire quary: https://www.postgresql.org/docs/9.4/libpq-exec.html
-- libpq Creare connessione: [https://www.postgresql.org/docs/9.4/libpq-exec.html](https://www.postgresql.org/docs/9.4/libpq-connect.html#LIBPQ-CONNSTRING)
-- traduzione: https://libretranslate.com/
-
-
-
-
+- **libpq eseguire query**: [https://www.postgresql.org/docs/9.4/libpq-exec.html](https://www.postgresql.org/docs/9.4/libpq-exec.html)
+- **libpq Creare connessione**: [https://www.postgresql.org/docs/9.4/libpq-connect.html#LIBPQ-CONNSTRING](https://www.postgresql.org/docs/9.4/libpq-connect.html#LIBPQ-CONNSTRING)
+- **Traduzione**: [https://libretranslate.com/](https://libretranslate.com/)
