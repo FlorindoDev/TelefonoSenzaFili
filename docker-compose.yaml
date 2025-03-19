@@ -44,7 +44,7 @@ services:
     tty: true # Assegna un terminale virtuale al container.
 
   libretranslate:
-    image: libretranslate
+    image: libretranslate/libretranslate
     container_name: libretranslate
     networks:
       dieti-net-lso:
