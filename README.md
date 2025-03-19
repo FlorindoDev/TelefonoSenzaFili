@@ -24,6 +24,12 @@ Eseguire lo script **ImageBuilder**<br>
   - `-t`: assegna un terminale pseudo-TTY.<br>
 
 ## Quarto passo
+Avviare il client nel conteiner con
+```
+./client
+```
+
+## Quinto passo
 - Giocare al gioco 🎮<br>
 
 # Fonti
