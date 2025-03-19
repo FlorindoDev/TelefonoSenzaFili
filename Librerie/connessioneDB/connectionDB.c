@@ -1,6 +1,6 @@
 
 PGconn* connect_to_DB(){
-    const char *conninfo = "host=192.168.92.27 port=5433 dbname=mydatabase user=db password=db";
+    const char *conninfo = "host=192.168.92.27 port=5432 dbname=mydatabase user=db password=db";
     PGconn* conn = PQconnectdb(conninfo);
 
      if (PQstatus(conn) != CONNECTION_OK) {

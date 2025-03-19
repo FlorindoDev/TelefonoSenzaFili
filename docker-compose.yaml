@@ -54,7 +54,7 @@ services:
     environment:
       - LT_LOAD_ONLY=en,it,fr,es
     ports:
-      - "5001:5001"
+      - "5000:5000"
 
   postgresql:
     image: postgres
@@ -67,7 +67,7 @@ services:
       POSTGRES_PASSWORD: db  # Password personalizzata
       POSTGRES_DB: mydatabase   # Nome database pre-creato
     ports:
-      - "5433:5433"
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data  # Persistenza dati
       - ./initdb:/docker-entrypoint-initdb.d

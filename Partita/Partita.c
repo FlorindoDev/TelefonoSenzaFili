@@ -654,7 +654,7 @@ char* Traduzione(char* s, Utente* u1, Utente* u2){
 
         
         // Impostare l'URL di destinazione
-        curl_easy_setopt(curl, CURLOPT_URL, "http://192.168.92.26:5001/translate");
+        curl_easy_setopt(curl, CURLOPT_URL, "http://192.168.92.26:5000/translate");
         
         // Impostare i dati da inviare (equivalente a -d "q=cane&source=it&target=en")
         
